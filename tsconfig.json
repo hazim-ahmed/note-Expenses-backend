@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "types": ["node", "express"],
     "paths": {
       "@expense-system/shared": ["./src/shared/index.ts"],
       "@expense-system/shared/*": ["./src/shared/*"],
