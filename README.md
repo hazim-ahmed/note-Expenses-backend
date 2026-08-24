@@ -3,11 +3,14 @@
 Node.js, Express, TypeScript, and Prisma API for the Expense Management System.
 
 ## Features
-- JWT Authentication & Role-based Access Control
-- Prisma ORM with PostgreSQL database
-- Expense management, Cash Vouchers, Journal entries
+- JWT Authentication & Role-based Access Control (RBAC)
+- Profile and username updates with uniqueness validation (`PATCH /auth/profile`, `PATCH /users/:id`)
+- Prisma ORM with database integration
+- Automated Daily Expense Journals & Cash Vouchers
+- Real-time Swagger OpenAPI 3.0 UI (`/api-docs`)
+- Comprehensive Markdown Documentation ([API_DOCUMENTATION.md](file:///c:/Users/Silver_Bullet/Desktop/note-Expenses-backend/API_DOCUMENTATION.md))
+- Complete Postman Collection ([postman_collection.json](file:///c:/Users/Silver_Bullet/Desktop/note-Expenses-backend/postman_collection.json))
 - Winston Logging & Helmet security headers
-- Swagger API Documentation
 
 ## Quick Start
 

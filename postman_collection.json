@@ -1,97 +1,471 @@
 {
   "info": {
-    "name": "Daily Expenses & Voucher System REST API",
-    "description": "Postman Collection for testing Daily Expense Management & Cash Voucher REST API",
+    "name": "Daily Expenses & Cash Voucher REST API",
+    "description": "Comprehensive Postman Collection for testing Daily Expense Management & Cash Voucher REST API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" }
+  ],
   "item": [
     {
-      "name": "Auth - Login",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"AdminPass123!\"\n}"
+      "name": "1. Auth & Profile",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.tokens) {",
+                  "        pm.collectionVariables.set('token', json.data.tokens.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', json.data.tokens.refreshToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"AdminPass123!\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
         },
-        "url": {
-          "raw": "http://localhost:4000/api/v1/auth/login",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "4000",
-          "path": ["api", "v1", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "Journals - Get All",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:4000/api/v1/expense-journals",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "4000",
-          "path": ["api", "v1", "expense-journals"]
-        }
-      }
-    },
-    {
-      "name": "Transactions - Get All",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:4000/api/v1/expense-transactions",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "4000",
-          "path": ["api", "v1", "expense-transactions"]
-        }
-      }
-    },
-    {
-      "name": "System Settings - Update Project Mode",
-      "request": {
-        "method": "PATCH",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"value\": \"REQUIRED_ON_APPROVAL\"\n}"
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
         },
-        "url": {
-          "raw": "http://localhost:4000/api/v1/system-settings/expenses.project_requirement_mode",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "4000",
-          "path": ["api", "v1", "system-settings", "expenses.project_requirement_mode"]
+        {
+          "name": "Get Current User Profile (/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Update Profile & Username (/auth/profile)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin_updated\",\n  \"fullName\": \"مدير النظام الرئيسي المطور\",\n  \"email\": \"admin.updated@company.com\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/profile"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/logout"
+          }
         }
-      }
+      ]
     },
     {
-      "name": "Transactions - Bulk Assign Project",
-      "request": {
-        "method": "PATCH",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"transactionIds\": [1, 2],\n  \"projectId\": 1,\n  \"reason\": \"Bulk assignment from Postman\"\n}"
+      "name": "2. Today Auto Journal",
+      "item": [
+        {
+          "name": "Get Today Overview",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/today"
+          }
         },
-        "url": {
-          "raw": "http://localhost:4000/api/v1/expense-transactions/bulk-assign-project",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "4000",
-          "path": ["api", "v1", "expense-transactions", "bulk-assign-project"]
+        {
+          "name": "Get Today Transactions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/today/transactions"
+          }
+        },
+        {
+          "name": "Create Today Transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"manualVoucherNumber\": \"1055\",\n  \"voucherBookNumber\": \"BK-01\",\n  \"voucherSource\": \"MANUAL\",\n  \"transactionType\": \"PURCHASE\",\n  \"amount\": 350.00,\n  \"description\": \"شراء مواد صيانة وتشغيل كهربائي\",\n  \"beneficiaryId\": 1,\n  \"categoryId\": 1,\n  \"paymentMethodId\": 1,\n  \"invoiceStatus\": \"PROVIDED\",\n  \"invoiceNumber\": \"INV-99881\",\n  \"invoiceDate\": \"2026-08-24\",\n  \"invoiceAmount\": 350.00\n}"
+            },
+            "url": "{{baseUrl}}/today/transactions"
+          }
+        },
+        {
+          "name": "Update Today Transaction",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 400.00,\n  \"description\": \"تعديل بيان المصروف والمبلغ\"\n}"
+            },
+            "url": "{{baseUrl}}/today/transactions/1"
+          }
+        },
+        {
+          "name": "Delete Today Transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/today/transactions/1"
+          }
         }
-      }
+      ]
+    },
+    {
+      "name": "3. Journals",
+      "item": [
+        {
+          "name": "Get All Journals",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/journals"
+          }
+        },
+        {
+          "name": "Get Journal By ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/journals/1"
+          }
+        },
+        {
+          "name": "Close Journal",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/journals/1/close"
+          }
+        },
+        {
+          "name": "Reopen Journal (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/journals/1/reopen"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Transactions & Bulk Assign",
+      "item": [
+        {
+          "name": "Bulk Assign Project",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionIds\": [1, 2],\n  \"projectId\": 1,\n  \"reason\": \"اعتماد تحميل المصروفات على مشروع النرجس\"\n}"
+            },
+            "url": "{{baseUrl}}/expense-transactions/bulk-assign-project"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Projects & Units",
+      "item": [
+        {
+          "name": "Get All Projects",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/projects"
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectCode\": \"PRJ-2026-09\",\n  \"projectName\": \"مشروع مجمع الياسمين السكني\",\n  \"estimatedBudget\": 750000.00,\n  \"location\": \"الرياض - الياسمين\"\n}"
+            },
+            "url": "{{baseUrl}}/projects"
+          }
+        },
+        {
+          "name": "Get Project Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/projects/1/summary"
+          }
+        },
+        {
+          "name": "Get Project Transactions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/projects/1/transactions"
+          }
+        },
+        {
+          "name": "Get Project Units",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/projects/1/units"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Users & RBAC",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sami.accountant\",\n  \"fullName\": \"سامي بن عبد العزيز\",\n  \"password\": \"UserPass123!\",\n  \"roleNames\": [\"ACCOUNTANT\"]\n}"
+            },
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "Update User & Username (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sami.senior\",\n  \"fullName\": \"سامي بن عبد العزيز المطوع\"\n}"
+            },
+            "url": "{{baseUrl}}/users/2"
+          }
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            },
+            "url": "{{baseUrl}}/users/2/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Beneficiaries",
+      "item": [
+        {
+          "name": "Get All Beneficiaries",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/beneficiaries"
+          }
+        },
+        {
+          "name": "Create Beneficiary",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"شركة الرواد للتجارة والمقاولات\",\n  \"beneficiaryType\": \"SUPPLIER\",\n  \"phone\": \"+966501234567\"\n}"
+            },
+            "url": "{{baseUrl}}/beneficiaries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Categories, Cashboxes & Methods",
+      "item": [
+        {
+          "name": "Get Expense Categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/expense-categories"
+          }
+        },
+        {
+          "name": "Get Cashboxes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/cashboxes"
+          }
+        },
+        {
+          "name": "Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/payment-methods"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. System Settings",
+      "item": [
+        {
+          "name": "Get System Settings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/system-settings"
+          }
+        },
+        {
+          "name": "Update Project Requirement Mode",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"REQUIRED_ON_APPROVAL\"\n}"
+            },
+            "url": "{{baseUrl}}/system-settings/expenses.project_requirement_mode"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Reports & Audit Logs",
+      "item": [
+        {
+          "name": "Daily Expenses Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reports/daily-expenses?date=2026-08-24"
+          }
+        },
+        {
+          "name": "Expenses By Project Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reports/by-project?projectId=1"
+          }
+        },
+        {
+          "name": "Expenses By Beneficiary Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reports/by-beneficiary"
+          }
+        },
+        {
+          "name": "Expenses By Category Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reports/by-category"
+          }
+        },
+        {
+          "name": "Unassigned Project Transactions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reports/unassigned-project-transactions"
+          }
+        },
+        {
+          "name": "Pending Invoices Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reports/pending-invoices"
+          }
+        },
+        {
+          "name": "Manual Vouchers Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reports/manual-vouchers"
+          }
+        },
+        {
+          "name": "Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/audit-logs?page=1&limit=20"
+          }
+        }
+      ]
     }
   ]
 }

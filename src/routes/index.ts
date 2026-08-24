@@ -23,6 +23,8 @@ router.post('/auth/login', AuthController.login);
 router.post('/auth/refresh', AuthController.refresh);
 router.post('/auth/logout', AuthController.logout);
 router.get('/auth/me', authenticateJWT, AuthController.me);
+router.patch('/auth/profile', authenticateJWT, AuthController.updateProfile);
+router.patch('/auth/me', authenticateJWT, AuthController.updateProfile);
 
 // ─────────────────────────────────────────
 // 2. Today's Auto Journal Engine

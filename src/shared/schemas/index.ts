@@ -78,6 +78,13 @@ export const UserCreateSchema = z.object({
 
 export const UserUpdateSchema = UserCreateSchema.partial().omit({ password: true });
 
+export const ProfileUpdateSchema = z.object({
+  username: z.string().min(3, 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل').optional(),
+  fullName: z.string().min(3, 'الاسم الكامل مطلوب').optional(),
+  email: z.string().email('البريد الإلكتروني غير صالح').nullable().optional(),
+  phone: z.string().nullable().optional(),
+});
+
 export const ResetPasswordSchema = z.object({
   newPassword: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
 });

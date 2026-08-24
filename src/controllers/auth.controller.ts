@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
+import { UserService } from '../services/userService';
 import { sendSuccess } from '../utils/response';
-import { LoginSchema, RefreshTokenSchema } from '../shared';
+import { LoginSchema, RefreshTokenSchema, ProfileUpdateSchema } from '../shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class AuthController {
@@ -28,6 +29,17 @@ export class AuthController {
   static async me(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       return sendSuccess(res, req.user, 'تم جلب بيانات المستخدم الحالية بنجاح');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.id;
+      const validated = ProfileUpdateSchema.parse(req.body);
+      const updated = await UserService.updateUser(userId, validated, userId);
+      return sendSuccess(res, updated, 'تم تحديث بيانات الملف الشخصي واسم المستخدم بنجاح');
     } catch (error) {
       next(error);
     }
