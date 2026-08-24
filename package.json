@@ -10,7 +10,7 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "prisma:generate": "prisma generate"
   },
