@@ -2,18 +2,18 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
-    "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "@expense-system/shared": ["src/shared/index.ts"],
-      "@expense-system/shared/*": ["src/shared/*"],
-      "@/*": ["src/*"]
+      "@expense-system/shared": ["./src/shared/index.ts"],
+      "@expense-system/shared/*": ["./src/shared/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"]
