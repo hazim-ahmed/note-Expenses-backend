@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { UserService } from '../services/userService';
 import { sendSuccess } from '../utils/response';
-import { UserCreateSchema, UserUpdateSchema, ResetPasswordSchema } from '@expense-system/shared';
+import { UserCreateSchema, UserUpdateSchema, ResetPasswordSchema } from '../shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class UserController {

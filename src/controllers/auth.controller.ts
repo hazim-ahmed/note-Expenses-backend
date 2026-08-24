@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { sendSuccess } from '../utils/response';
-import { LoginSchema, RefreshTokenSchema } from '@expense-system/shared';
+import { LoginSchema, RefreshTokenSchema } from '../shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class AuthController {

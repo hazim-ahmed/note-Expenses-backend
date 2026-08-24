@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { ProjectService } from '../services/project.service';
 import { sendSuccess } from '../utils/response';
-import { ProjectCreateSchema, ProjectUpdateSchema, ProjectUnitCreateSchema } from '@expense-system/shared';
+import { ProjectCreateSchema, ProjectUpdateSchema, ProjectUnitCreateSchema } from '../shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class ProjectController {
