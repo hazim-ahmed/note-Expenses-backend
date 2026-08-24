@@ -1,0 +1,437 @@
+// Prisma Schema for Daily Expenses & Voucher Management System
+// Database: MySQL 8.x
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------
+// Users, Roles & Permissions (RBAC)
+// ------------------------------------------------------
+
+model User {
+  id                 BigInt    @id @default(autoincrement())
+  username           String    @unique @db.VarChar(50)
+  employeeNumber     String?   @unique @map("employee_number") @db.VarChar(50)
+  fullName           String    @map("full_name") @db.VarChar(100)
+  email              String?   @unique @db.VarChar(100)
+  phone              String?   @db.VarChar(30)
+  passwordHash       String    @map("password_hash") @db.VarChar(255)
+  isActive           Boolean   @default(true) @map("is_active")
+  mustChangePassword Boolean   @default(false) @map("must_change_password")
+  status             String    @default("ACTIVE") @db.VarChar(30) // ACTIVE, INACTIVE, SUSPENDED
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  userRoles             UserRole[]
+  userProjects          UserProject[]        @relation("UserProjectsAssigned")
+  assignedProjectsUser  UserProject[]        @relation("UserProjectAssigner")
+  userCashboxes         UserCashbox[]        @relation("UserCashboxesAssigned")
+  assignedCashboxesUser UserCashbox[]        @relation("UserCashboxAssigner")
+  managedProjects       Project[]            @relation("ProjectManager")
+  custodianCashboxes    Cashbox[]            @relation("CashboxCustodian")
+  preparedJournals      ExpenseJournal[]     @relation("JournalPreparedBy")
+  approvedJournals      ExpenseJournal[]     @relation("JournalApprovedBy")
+  closedJournals        ExpenseJournal[]     @relation("JournalClosedBy")
+  createdTransactions   ExpenseTransaction[] @relation("TxCreatedBy")
+  submittedTransactions ExpenseTransaction[] @relation("TxSubmittedBy")
+  approvedTransactions  ExpenseTransaction[] @relation("TxApprovedBy")
+  cancelledTransactions ExpenseTransaction[] @relation("TxCancelledBy")
+  uploadedAttachments   TransactionAttachment[]
+  approvalsActions      ExpenseApproval[]
+  auditLogs             AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique @db.VarChar(50) // ADMIN, CASHIER, ACCOUNTANT, MANAGER, VIEWER
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          BigInt   @id @default(autoincrement())
+  code        String   @unique @db.VarChar(100) // e.g. projects.create, users.update
+  name        String   @db.VarChar(100)
+  description String?  @db.VarChar(255)
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       BigInt     @map("role_id")
+  permissionId BigInt     @map("permission_id")
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId BigInt @map("user_id")
+  roleId BigInt @map("role_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ------------------------------------------------------
+// User Linkages to Projects & Cashboxes
+// ------------------------------------------------------
+
+model UserProject {
+  id          BigInt    @id @default(autoincrement())
+  userId      BigInt    @map("user_id")
+  projectId   BigInt    @map("project_id")
+  accessLevel String    @default("VIEW") @map("access_level") @db.VarChar(30) // VIEW, CREATE_EXPENSES, MANAGE_EXPENSES, APPROVE_EXPENSES, FULL_ACCESS
+  assignedBy  BigInt    @map("assigned_by")
+  assignedAt  DateTime  @default(now()) @map("assigned_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  removedAt   DateTime? @map("removed_at")
+
+  user     User    @relation("UserProjectsAssigned", fields: [userId], references: [id], onDelete: Cascade)
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigner User    @relation("UserProjectAssigner", fields: [assignedBy], references: [id], onDelete: Restrict)
+
+  @@unique([userId, projectId])
+  @@map("user_projects")
+}
+
+model UserCashbox {
+  id                   BigInt   @id @default(autoincrement())
+  userId               BigInt   @map("user_id")
+  cashboxId            BigInt   @map("cashbox_id")
+  canOpenJournal       Boolean  @default(false) @map("can_open_journal")
+  canCreateTransaction Boolean  @default(false) @map("can_create_transaction")
+  canSubmitJournal     Boolean  @default(false) @map("can_submit_journal")
+  canViewBalance       Boolean  @default(true) @map("can_view_balance")
+  assignedBy           BigInt   @map("assigned_by")
+  assignedAt           DateTime @default(now()) @map("assigned_at")
+  isActive             Boolean  @default(true) @map("is_active")
+
+  user     User    @relation("UserCashboxesAssigned", fields: [userId], references: [id], onDelete: Cascade)
+  cashbox  Cashbox @relation(fields: [cashboxId], references: [id], onDelete: Cascade)
+  assigner User    @relation("UserCashboxAssigner", fields: [assignedBy], references: [id], onDelete: Restrict)
+
+  @@unique([userId, cashboxId])
+  @@map("user_cashboxes")
+}
+
+// ------------------------------------------------------
+// System Settings
+// ------------------------------------------------------
+
+model SystemSetting {
+  id          BigInt   @id @default(autoincrement())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+// ------------------------------------------------------
+// Master Data: Cashboxes, Payment Methods, Categories
+// ------------------------------------------------------
+
+model Cashbox {
+  id              BigInt   @id @default(autoincrement())
+  code            String   @unique @db.VarChar(30)
+  name            String   @db.VarChar(100)
+  branchName      String?  @map("branch_name") @db.VarChar(100)
+  custodianUserId BigInt?  @map("custodian_user_id")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  custodian     User?         @relation("CashboxCustodian", fields: [custodianUserId], references: [id], onDelete: SetNull)
+  journals      ExpenseJournal[]
+  userCashboxes UserCashbox[]
+
+  @@map("cashboxes")
+}
+
+model PaymentMethod {
+  id                BigInt   @id @default(autoincrement())
+  code              String   @unique @db.VarChar(30)
+  name              String   @db.VarChar(100)
+  requiresReference Boolean  @default(false) @map("requires_reference")
+  isActive          Boolean  @default(true) @map("is_active")
+
+  transactions ExpenseTransaction[]
+
+  @@map("payment_methods")
+}
+
+model ExpenseCategory {
+  id                    BigInt   @id @default(autoincrement())
+  code                  String   @unique @db.VarChar(30)
+  name                  String   @db.VarChar(100)
+  parentId              BigInt?  @map("parent_id")
+  accountingAccountCode String?  @map("accounting_account_code") @db.VarChar(50)
+  requiresProject       Boolean  @default(false) @map("requires_project")
+  requiresInvoice       Boolean  @default(false) @map("requires_invoice")
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  parent       ExpenseCategory?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     ExpenseCategory[]    @relation("CategoryHierarchy")
+  transactions ExpenseTransaction[]
+
+  @@map("expense_categories")
+}
+
+// ------------------------------------------------------
+// Master Data: Projects & Project Units
+// ------------------------------------------------------
+
+model Project {
+  id               BigInt    @id @default(autoincrement())
+  projectCode      String    @unique @map("project_code") @db.VarChar(50)
+  projectName      String    @map("project_name") @db.VarChar(150)
+  description      String?   @db.Text
+  costCenterCode   String?   @map("cost_center_code") @db.VarChar(50)
+  location         String?   @db.VarChar(150)
+  projectManagerId BigInt?   @map("project_manager_id")
+  status           String    @default("ACTIVE") @db.VarChar(30) // PLANNED, ACTIVE, SUSPENDED, COMPLETED, ARCHIVED, CANCELLED
+  startDate        DateTime? @map("start_date") @db.Date
+  expectedEndDate  DateTime? @map("expected_end_date") @db.Date
+  estimatedBudget  Decimal?  @map("estimated_budget") @db.Decimal(15, 2)
+  isActive         Boolean   @default(true) @map("is_active")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  manager      User?                @relation("ProjectManager", fields: [projectManagerId], references: [id], onDelete: SetNull)
+  projectUnits ProjectUnit[]
+  userProjects UserProject[]
+  transactions ExpenseTransaction[]
+
+  @@map("projects")
+}
+
+model ProjectUnit {
+  id             BigInt   @id @default(autoincrement())
+  projectId      BigInt   @map("project_id")
+  unitNumber     String   @map("unit_number") @db.VarChar(50)
+  unitType       String   @map("unit_type") @db.VarChar(50)
+  buildingNumber String?  @map("building_number") @db.VarChar(50)
+  floorNumber    String?  @map("floor_number") @db.VarChar(20)
+  status         String   @default("AVAILABLE") @db.VarChar(30) // AVAILABLE, SOLD, RENTED, UNDER_MAINTENANCE
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  transactions ExpenseTransaction[]
+
+  @@unique([projectId, unitNumber])
+  @@map("project_units")
+}
+
+// ------------------------------------------------------
+// Master Data: Beneficiaries
+// ------------------------------------------------------
+
+model Beneficiary {
+  id                     BigInt   @id @default(autoincrement())
+  beneficiaryType        String   @map("beneficiary_type") @db.VarChar(30)
+  name                   String   @db.VarChar(150)
+  commercialName         String?  @map("commercial_name") @db.VarChar(150)
+  taxNumber              String?  @map("tax_number") @db.VarChar(50)
+  commercialRegistration String?  @map("commercial_registration") @db.VarChar(50)
+  phone                  String?  @db.VarChar(30)
+  email                  String?  @db.VarChar(100)
+  iban                   String?  @db.VarChar(50)
+  bankName               String?  @map("bank_name") @db.VarChar(100)
+  notes                  String?  @db.Text
+  isActive               Boolean  @default(true) @map("is_active")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  transactions ExpenseTransaction[]
+
+  @@map("beneficiaries")
+}
+
+// ------------------------------------------------------
+// Financial Engine: Expense Journals
+// ------------------------------------------------------
+
+model ExpenseJournal {
+  id             BigInt    @id @default(autoincrement())
+  journalNumber  String    @unique @map("journal_number") @db.VarChar(50)
+  journalDate    DateTime  @map("journal_date") @db.Date
+  cashboxId      BigInt    @map("cashbox_id")
+  status         String    @default("OPEN") @db.VarChar(30)
+  openingBalance Decimal   @default(0.00) @map("opening_balance") @db.Decimal(15, 2)
+  preparedBy     BigInt    @map("prepared_by")
+  submittedAt    DateTime? @map("submitted_at")
+  approvedBy     BigInt?   @map("approved_by")
+  approvedAt     DateTime? @map("approved_at")
+  closedBy       BigInt?   @map("closed_by")
+  closedAt       DateTime? @map("closed_at")
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  cashbox      Cashbox              @relation(fields: [cashboxId], references: [id], onDelete: Restrict)
+  preparer     User                 @relation("JournalPreparedBy", fields: [preparedBy], references: [id], onDelete: Restrict)
+  approver     User?                @relation("JournalApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
+  closer       User?                @relation("JournalClosedBy", fields: [closedBy], references: [id], onDelete: SetNull)
+  transactions ExpenseTransaction[]
+  approvals    ExpenseApproval[]
+
+  @@index([journalDate])
+  @@index([cashboxId])
+  @@index([status])
+  @@map("expense_journals")
+}
+
+// ------------------------------------------------------
+// Financial Engine: Expense Transactions
+// ------------------------------------------------------
+
+model ExpenseTransaction {
+  id                  BigInt    @id @default(autoincrement())
+  journalId           BigInt    @map("journal_id")
+  systemReference     String    @unique @map("system_reference") @db.VarChar(50)
+  voucherSource       String    @default("MANUAL") @map("voucher_source") @db.VarChar(20)
+  manualVoucherNumber String?   @map("manual_voucher_number") @db.VarChar(50)
+  voucherBookNumber   String?   @map("voucher_book_number") @db.VarChar(50)
+  voucherBookKey      String    @default("NONE") @map("voucher_book_key") @db.VarChar(50)
+  voucherDate         DateTime  @map("voucher_date") @db.Date
+  transactionType     String    @map("transaction_type") @db.VarChar(30)
+  beneficiaryId       BigInt    @map("beneficiary_id")
+  categoryId          BigInt    @map("category_id")
+  projectId           BigInt?   @map("project_id")
+  projectUnitId       BigInt?   @map("project_unit_id")
+  paymentMethodId     BigInt    @map("payment_method_id")
+  amount              Decimal   @db.Decimal(15, 2)
+  description         String    @db.Text
+  invoiceStatus       String    @default("NOT_REQUIRED") @map("invoice_status") @db.VarChar(30)
+  invoiceNumber       String?   @map("invoice_number") @db.VarChar(50)
+  invoiceDate         DateTime? @map("invoice_date") @db.Date
+  invoiceAmount       Decimal?  @map("invoice_amount") @db.Decimal(15, 2)
+  paymentReference    String?   @map("payment_reference") @db.VarChar(100)
+  fiscalYear          Int       @map("fiscal_year")
+  status              String    @default("DRAFT") @db.VarChar(30)
+  rejectionReason     String?   @map("rejection_reason") @db.Text
+  notes               String?   @db.Text
+  createdBy           BigInt    @map("created_by")
+  submittedBy         BigInt?   @map("submitted_by")
+  submittedAt         DateTime? @map("submitted_at")
+  approvedBy          BigInt?   @map("approved_by")
+  approvedAt          DateTime? @map("approved_at")
+  cancelledBy         BigInt?   @map("cancelled_by")
+  cancelledAt         DateTime? @map("cancelled_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  journal       ExpenseJournal          @relation(fields: [journalId], references: [id], onDelete: Restrict)
+  beneficiary   Beneficiary             @relation(fields: [beneficiaryId], references: [id], onDelete: Restrict)
+  category      ExpenseCategory         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  project       Project?                @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  projectUnit   ProjectUnit?            @relation(fields: [projectUnitId], references: [id], onDelete: SetNull)
+  paymentMethod PaymentMethod           @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  creator       User                    @relation("TxCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  submitter     User?                   @relation("TxSubmittedBy", fields: [submittedBy], references: [id], onDelete: SetNull)
+  approver      User?                   @relation("TxApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
+  canceller     User?                   @relation("TxCancelledBy", fields: [cancelledBy], references: [id], onDelete: SetNull)
+  attachments   TransactionAttachment[]
+  approvals     ExpenseApproval[]
+
+  @@index([systemReference])
+  @@index([manualVoucherNumber])
+  @@index([beneficiaryId])
+  @@index([projectId])
+  @@index([categoryId])
+  @@index([invoiceNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("expense_transactions")
+}
+
+// ------------------------------------------------------
+// Attachments
+// ------------------------------------------------------
+
+model TransactionAttachment {
+  id               BigInt   @id @default(autoincrement())
+  transactionId    BigInt   @map("transaction_id")
+  attachmentType   String   @map("attachment_type") @db.VarChar(30)
+  originalFileName String   @map("original_file_name") @db.VarChar(255)
+  storedFileName   String   @map("stored_file_name") @db.VarChar(255)
+  filePath         String   @map("file_path") @db.VarChar(500)
+  mimeType         String   @map("mime_type") @db.VarChar(100)
+  fileSize         Int      @map("file_size")
+  uploadedBy       BigInt   @map("uploaded_by")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  transaction ExpenseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  uploader    User               @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+
+  @@map("transaction_attachments")
+}
+
+// ------------------------------------------------------
+// Approvals & Audit Trail
+// ------------------------------------------------------
+
+model ExpenseApproval {
+  id            BigInt   @id @default(autoincrement())
+  transactionId BigInt?  @map("transaction_id")
+  journalId     BigInt?  @map("journal_id")
+  approvalLevel String   @default("LEVEL_1") @map("approval_level") @db.VarChar(30)
+  action        String   @db.VarChar(30)
+  actionBy      BigInt   @map("action_by")
+  comments      String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  transaction ExpenseTransaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  journal     ExpenseJournal?     @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  actor       User                @relation(fields: [actionBy], references: [id], onDelete: Restrict)
+
+  @@map("expense_approvals")
+}
+
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  userId     BigInt?  @map("user_id")
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   BigInt   @map("entity_id")
+  action     String   @db.VarChar(50)
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+  reason     String?  @db.Text
+  ipAddress  String?  @map("ip_address") @db.VarChar(50)
+  userAgent  String?  @map("user_agent") @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

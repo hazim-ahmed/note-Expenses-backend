@@ -1,0 +1,97 @@
+{
+  "info": {
+    "name": "Daily Expenses & Voucher System REST API",
+    "description": "Postman Collection for testing Daily Expense Management & Cash Voucher REST API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"AdminPass123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4000/api/v1/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "4000",
+          "path": ["api", "v1", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Journals - Get All",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:4000/api/v1/expense-journals",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "4000",
+          "path": ["api", "v1", "expense-journals"]
+        }
+      }
+    },
+    {
+      "name": "Transactions - Get All",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:4000/api/v1/expense-transactions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "4000",
+          "path": ["api", "v1", "expense-transactions"]
+        }
+      }
+    },
+    {
+      "name": "System Settings - Update Project Mode",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"value\": \"REQUIRED_ON_APPROVAL\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4000/api/v1/system-settings/expenses.project_requirement_mode",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "4000",
+          "path": ["api", "v1", "system-settings", "expenses.project_requirement_mode"]
+        }
+      }
+    },
+    {
+      "name": "Transactions - Bulk Assign Project",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionIds\": [1, 2],\n  \"projectId\": 1,\n  \"reason\": \"Bulk assignment from Postman\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4000/api/v1/expense-transactions/bulk-assign-project",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "4000",
+          "path": ["api", "v1", "expense-transactions", "bulk-assign-project"]
+        }
+      }
+    }
+  ]
+}

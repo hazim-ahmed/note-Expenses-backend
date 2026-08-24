@@ -1,0 +1,96 @@
+export enum ProjectRequirementMode {
+  OPTIONAL = 'OPTIONAL',
+  REQUIRED_ON_APPROVAL = 'REQUIRED_ON_APPROVAL',
+  REQUIRED_ON_CREATE = 'REQUIRED_ON_CREATE',
+}
+
+export enum VoucherSource {
+  MANUAL = 'MANUAL',
+  SYSTEM = 'SYSTEM',
+}
+
+export enum JournalStatus {
+  OPEN = 'OPEN',
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  CLOSED = 'CLOSED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum TransactionStatus {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  POSTED = 'POSTED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum TransactionType {
+  PURCHASE = 'PURCHASE',
+  GENERAL_EXPENSE = 'GENERAL_EXPENSE',
+  COMMISSION = 'COMMISSION',
+  SERVICE = 'SERVICE',
+  SALARY = 'SALARY',
+  ADVANCE = 'ADVANCE',
+  GOVERNMENT_FEE = 'GOVERNMENT_FEE',
+  REFUND = 'REFUND',
+  OTHER = 'OTHER',
+}
+
+export enum InvoiceStatus {
+  PROVIDED = 'PROVIDED',
+  NOT_AVAILABLE = 'NOT_AVAILABLE',
+  NOT_REQUIRED = 'NOT_REQUIRED',
+  PENDING = 'PENDING',
+}
+
+export enum BeneficiaryType {
+  PERSON = 'PERSON',
+  EMPLOYEE = 'EMPLOYEE',
+  SUPPLIER = 'SUPPLIER',
+  COMPANY = 'COMPANY',
+  INSTITUTION = 'INSTITUTION',
+  OTHER = 'OTHER',
+}
+
+export enum ProjectStatus {
+  PLANNED = 'PLANNED',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum AttachmentType {
+  INVOICE = 'INVOICE',
+  RECEIPT = 'RECEIPT',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  CONTRACT = 'CONTRACT',
+  MANUAL_VOUCHER = 'MANUAL_VOUCHER',
+  OTHER = 'OTHER',
+}
+
+export enum ApprovalAction {
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  RETURNED = 'RETURNED',
+  CANCELLED = 'CANCELLED',
+  POSTED = 'POSTED',
+}
+
+export enum SystemRole {
+  ADMIN = 'ADMIN',
+  CASHIER = 'CASHIER',
+  ACCOUNTANT = 'ACCOUNTANT',
+  MANAGER = 'MANAGER',
+  VIEWER = 'VIEWER',
+}
+
+export const SYSTEM_SETTINGS_KEYS = {
+  PROJECT_REQUIREMENT_MODE: 'expenses.project_requirement_mode',
+  PREVENT_SELF_APPROVAL: 'expenses.prevent_self_approval',
+  MAX_MANAGER_APPROVAL_LIMIT: 'expenses.max_manager_approval_limit',
+};
