@@ -264,45 +264,55 @@ export class ExportService {
               display: flex;
               justify-content: space-between;
               align-items: flex-start;
-              border-bottom: 2px solid #1E293B;
-              padding-bottom: 10px;
-              margin-bottom: 14px;
+              border-bottom: 2px solid #000000;
+              padding-bottom: 8px;
+              margin-bottom: 12px;
             }
             .header-org {
-              width: 32%;
+              width: 33%;
               text-align: right;
             }
             .org-name {
               font-size: 11pt;
-              font-weight: 700;
-              color: #0F172A;
+              font-weight: 800;
+              color: #000000;
               margin: 0 0 2px 0;
             }
             .org-dept {
-              font-size: 9pt;
-              color: #475569;
+              font-size: 8.5pt;
+              color: #000000;
+              font-weight: 600;
+            }
+            .org-meta {
+              font-size: 7.5pt;
+              color: #4B5563;
+              margin-top: 2px;
             }
             .header-center {
-              width: 36%;
+              width: 34%;
               text-align: center;
             }
             .report-main-title {
-              font-size: 18pt;
-              font-weight: 800;
-              color: #0F172A;
-              margin: 0 0 4px 0;
-              letter-spacing: -0.5px;
+              font-size: 17pt;
+              font-weight: 900;
+              color: #000000;
+              margin: 0 0 2px 0;
+              letter-spacing: 0.5px;
+              border-bottom: 1px solid #000000;
+              display: inline-block;
+              padding-bottom: 2px;
             }
             .report-sub-title {
-              font-size: 9.5pt;
-              color: #334155;
-              font-weight: 600;
+              font-size: 9pt;
+              color: #000000;
+              font-weight: 700;
+              margin-top: 3px;
             }
             .header-meta {
-              width: 32%;
+              width: 33%;
               text-align: left;
               font-size: 8.5pt;
-              color: #475569;
+              color: #000000;
             }
             .header-meta table {
               margin-left: 0;
@@ -310,31 +320,29 @@ export class ExportService {
               border-collapse: collapse;
             }
             .header-meta td {
-              padding: 1px 4px;
+              padding: 1px 3px;
             }
 
             /* ملخص التقرير المالي */
             .summary-table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 14px;
-              background-color: #F8FAFC;
-              border: 1px solid #CBD5E1;
+              margin-bottom: 12px;
+              background-color: #FAFAFA;
+              border: 1px solid #000000;
             }
             .summary-table td {
-              border: 1px solid #CBD5E1;
-              padding: 6px 10px;
-              font-size: 9.5pt;
-            }
-            .summary-table strong {
-              color: #0F172A;
+              border: 1px solid #000000;
+              padding: 5px 8px;
+              font-size: 9pt;
+              color: #000000;
             }
 
             /* تصميم جدول المصروفات */
             table.expense-table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 16px;
+              margin-bottom: 14px;
             }
             table.expense-table thead {
               display: table-header-group;
@@ -344,98 +352,99 @@ export class ExportService {
               page-break-inside: avoid;
             }
             table.expense-table th {
-              background-color: #1F2937 !important;
-              color: #FFFFFF !important;
-              font-weight: 700;
-              font-size: 10pt;
-              padding: 7px 8px;
-              border: 1px solid #CBD5E1;
+              background-color: #F3F4F6 !important;
+              color: #000000 !important;
+              font-weight: 800;
+              font-size: 9pt;
+              padding: 6px 6px;
+              border: 1px solid #000000;
               text-align: center;
             }
             table.expense-table td {
-              border: 1px solid #CBD5E1;
-              padding: 6px 8px;
-              font-size: 9pt;
-              color: #1F2937;
+              border: 1px solid #000000;
+              padding: 5px 6px;
+              font-size: 8.5pt;
+              color: #000000;
               vertical-align: middle;
             }
             table.expense-table tbody tr:nth-child(even) {
-              background-color: #F8FAFC;
+              background-color: #FAFAFA;
             }
 
             .col-center { text-align: center; }
             .col-right { text-align: right; }
             .font-mono { font-family: 'Consolas', 'Courier New', monospace; font-weight: 600; font-size: 8.5pt; }
             .col-desc { word-break: break-word; }
-            .col-notes { word-break: break-word; font-size: 8.5pt; color: #4B5563; }
+            .col-notes { word-break: break-word; font-size: 8pt; color: #000000; }
             .col-amount {
               text-align: left;
               direction: ltr;
-              font-weight: 700;
+              font-weight: 800;
               font-family: 'Consolas', 'Courier New', monospace;
-              font-size: 9.5pt;
-              color: #0F172A;
+              font-size: 9pt;
+              color: #000000;
               white-space: nowrap;
             }
 
             /* صف الإجمالي الكلي */
             .total-row {
-              background-color: #EEF2F6 !important;
+              background-color: #F3F4F6 !important;
             }
             .total-row td {
-              border-top: 2px solid #1E293B !important;
-              border-bottom: 3px double #1E293B !important;
-              font-weight: 800 !important;
-              font-size: 10.5pt !important;
-              color: #0F172A !important;
-              padding: 8px 10px;
+              border-top: 2px solid #000000 !important;
+              border-bottom: 4px double #000000 !important;
+              font-weight: 900 !important;
+              font-size: 10pt !important;
+              color: #000000 !important;
+              padding: 7px 8px;
             }
 
-            /* قسم التواقيع والاعتمادات الرسمية الثلاثية */
+            /* قسم التواقيع والاعتمادات الرسمية أسفل التقرير */
             .signatures-container {
               display: flex;
               justify-content: space-between;
-              gap: 16px;
-              margin-top: 24px;
+              gap: 40px;
+              margin-top: 20px;
+              padding: 0 30px;
               break-inside: avoid;
               page-break-inside: avoid;
             }
             .sig-box {
               flex: 1;
-              border: 1px solid #94A3B8;
+              border: 1px solid #000000;
               padding: 8px 12px;
               text-align: center;
               background-color: #FFFFFF;
             }
             .sig-box-title {
               font-size: 9.5pt;
-              font-weight: 700;
-              color: #0F172A;
-              border-bottom: 1px solid #E2E8F0;
+              font-weight: 800;
+              color: #000000;
+              border-bottom: 1px solid #000000;
               padding-bottom: 4px;
-              margin-bottom: 18px;
+              margin-bottom: 14px;
             }
             .sig-box-content {
               font-size: 8.5pt;
-              color: #475569;
+              color: #000000;
               text-align: right;
               line-height: 1.8;
             }
             .sig-dotted-line {
-              border-bottom: 1px dotted #94A3B8;
+              border-bottom: 1px dotted #000000;
               display: inline-block;
-              width: 60%;
+              width: 65%;
             }
 
             /* التذييل */
             .report-footer {
-              margin-top: 16px;
-              border-top: 1px solid #CBD5E1;
-              padding-top: 6px;
+              margin-top: 14px;
+              border-top: 1px solid #000000;
+              padding-top: 4px;
               display: flex;
               justify-content: space-between;
-              font-size: 8pt;
-              color: #64748B;
+              font-size: 7.5pt;
+              color: #4B5563;
             }
           </style>
         </head>
@@ -443,18 +452,19 @@ export class ExportService {
           <!-- 1. رأس التقرير -->
           <div class="report-header">
             <div class="header-org">
-              <div class="org-name">نظام إدارة المصروفات وسندات الصرف</div>
-              <div class="org-dept">إدارة الشؤون المالية والحسابات العامة</div>
+              <div class="org-name">شركة إدارة المشاريع والخدمات العامة</div>
+              <div class="org-dept">إدارة الشؤون المالية والمصروفات</div>
+              <div class="org-meta">س.ت: 1010000000 | الرقم الضريبي: 300000000000003</div>
             </div>
             <div class="header-center">
-              <h1 class="report-main-title">« دفتر المصروفات »</h1>
-              <div class="report-sub-title">${options.title || 'سجل المصروفات واليومية العامة'}</div>
+              <h1 class="report-main-title">دفتر المصروفات</h1>
+              <div class="report-sub-title">${options.title || 'سجل اليومية العامة المعتمدة'}</div>
             </div>
             <div class="header-meta">
               <table>
                 <tr><td><strong>رقم الكشف:</strong></td><td class="font-mono">${options.journalNumber || 'JRN-' + new Date().toISOString().slice(0, 10).replace(/-/g, '')}</td></tr>
-                <tr><td><strong>تاريخ التقرير:</strong></td><td>${reportDate}</td></tr>
-                <tr><td><strong>تاريخ ووقت الإنشاء:</strong></td><td>${new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</td></tr>
+                <tr><td><strong>تاريخ اليومية:</strong></td><td>${reportDate}</td></tr>
+                <tr><td><strong>تاريخ الطباعة:</strong></td><td>${new Date().toLocaleDateString('ar-SA')} - ${new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</td></tr>
               </table>
             </div>
           </div>
@@ -462,10 +472,10 @@ export class ExportService {
           <!-- 2. ملخص التقرير المالي -->
           <table class="summary-table">
             <tr>
-              <td style="width: 25%;"><strong>عدد المصروفات:</strong> <span class="font-mono">${options.rows.length}</span> سند</td>
-              <td style="width: 25%;"><strong>إجمالي قيمة المصروفات:</strong> <strong>${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</strong></td>
-              <td style="width: 25%;"><strong>تاريخ بداية الفترة:</strong> ${reportDate}</td>
               <td style="width: 25%;"><strong>الصندوق المالي:</strong> ${options.cashboxName || 'الصندوق الرئيسي'}</td>
+              <td style="width: 25%;"><strong>تاريخ الفترة:</strong> ${reportDate}</td>
+              <td style="width: 25%;"><strong>عدد السندات:</strong> <span class="font-mono font-bold">${options.rows.length}</span> سند</td>
+              <td style="width: 25%;"><strong>إجمالي المصروفات:</strong> <strong>${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</strong></td>
             </tr>
           </table>
 
@@ -476,59 +486,51 @@ export class ExportService {
                 <th style="width: 4%;">#</th>
                 <th style="width: 9%;">تاريخ المصروف</th>
                 <th style="width: 22%;">بيان المصروف</th>
-                <th style="width: 11%;">التصنيف</th>
-                <th style="width: 13%;">مركز التكلفة (المشروع)</th>
-                <th style="width: 10%;">رقم السند</th>
+                <th style="width: 12%;">المستفيد</th>
+                <th style="width: 10%;">التصنيف</th>
+                <th style="width: 12%;">مركز التكلفة (المشروع)</th>
+                <th style="width: 9%;">رقم السند</th>
                 <th style="width: 8%;">رقم الفاتورة</th>
                 <th style="width: 11%;">المبلغ</th>
-                <th style="width: 12%;">الملاحظات</th>
+                <th style="width: 11%;">الملاحظات</th>
               </tr>
             </thead>
             <tbody>
               ${tableRowsHtml}
               ${options.rows.length > 0 ? `
               <tr class="total-row">
-                <td colspan="7" style="text-align: center;">الإجمالي الكلي</td>
-                <td class="col-amount" style="text-align: left; font-size: 10.5pt; font-weight: 800;">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</td>
+                <td colspan="8" style="text-align: center;">الإجمالي الكلي</td>
+                <td class="col-amount" style="text-align: left; font-size: 10pt; font-weight: 900;">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</td>
                 <td></td>
               </tr>
               ` : ''}
             </tbody>
           </table>
 
-          <!-- 4. قسم التواقيع والاعتمادات الرسمية الثلاثية -->
+          <!-- 4. قسم التواقيع والاعتمادات الرسمية أسفل التقرير -->
           <div class="signatures-container">
             <div class="sig-box">
-              <div class="sig-box-title">إعداد: أمين الصندوق / المحاسب</div>
+              <div class="sig-box-title">توقيع المشرف / المسؤول</div>
               <div class="sig-box-content">
                 <div>الاسم: <span class="sig-dotted-line"></span></div>
-                <div style="margin-top: 6px;">التوقيع: <span class="sig-dotted-line"></span></div>
-                <div style="margin-top: 6px;">التاريخ: .... / .... / 2026 م</div>
+                <div style="margin-top: 5px;">التوقيع: <span class="sig-dotted-line"></span></div>
+                <div style="margin-top: 5px;">التاريخ: .... / .... / 2026 م</div>
               </div>
             </div>
 
             <div class="sig-box">
-              <div class="sig-box-title">تدقيق: المشرف المالي / المراجع</div>
-              <div class="sig-box-content">
-                <div>الاسم: <span class="sig-dotted-line"></span></div>
-                <div style="margin-top: 6px;">التوقيع: <span class="sig-dotted-line"></span></div>
-                <div style="margin-top: 6px;">التاريخ: .... / .... / 2026 م</div>
-              </div>
-            </div>
-
-            <div class="sig-box">
-              <div class="sig-box-title">اعتماد: المدير العام / الإدارة</div>
+              <div class="sig-box-title">توقيع واعتماد الإدارة</div>
               <div class="sig-box-content">
                 <div>الاعتماد: <span class="sig-dotted-line"></span></div>
-                <div style="margin-top: 6px;">الختم الرسمي: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</div>
-                <div style="margin-top: 6px;">التاريخ: .... / .... / 2026 م</div>
+                <div style="margin-top: 5px;">الختم الرسمي: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</div>
+                <div style="margin-top: 5px;">التاريخ: .... / .... / 2026 م</div>
               </div>
             </div>
           </div>
 
           <!-- 5. التذييل -->
           <div class="report-footer">
-            <div>* مستند محاسبي صادر آلياً من نظام إدارة المصروفات وسندات الصرف.</div>
+            <div>* مستند محاسبي رسمي صادر آلياً من نظام إدارة المصروفات وسندات الصرف.</div>
             <div>صفحة 1 من 1</div>
           </div>
         </body>
