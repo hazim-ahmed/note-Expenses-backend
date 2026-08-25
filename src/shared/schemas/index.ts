@@ -78,13 +78,6 @@ export const UserCreateSchema = z.object({
 
 export const UserUpdateSchema = UserCreateSchema.partial().omit({ password: true });
 
-export const ProfileUpdateSchema = z.object({
-  username: z.string().min(3, 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل').optional(),
-  fullName: z.string().min(3, 'الاسم الكامل مطلوب').optional(),
-  email: z.string().email('البريد الإلكتروني غير صالح').nullable().optional(),
-  phone: z.string().nullable().optional(),
-});
-
 export const ResetPasswordSchema = z.object({
   newPassword: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
 });
@@ -128,4 +121,47 @@ export const ExpenseTransactionCreateSchema = z.object({
       });
     }
   }
+});
+
+export const TodayTransactionCreateSchema = z.object({
+  manualVoucherNumber: z.string().trim().min(1).nullable().optional(),
+  beneficiaryId: z.number().int().positive().nullable().optional(),
+  beneficiaryName: z.string().trim().min(2).nullable().optional(),
+  categoryId: z.number().int().positive('التصنيف مطلوب'),
+  projectId: z.number().int().positive().nullable().optional(),
+  projectUnitId: z.number().int().positive().nullable().optional(),
+  paymentMethodId: z.number().int().positive('طريقة الدفع مطلوبة'),
+  paymentReference: z.string().trim().min(1).nullable().optional(),
+  amount: z.number().positive('المبلغ يجب أن يكون أكبر من صفر'),
+  description: z.string().trim().min(3, 'تفاصيل المصروف مطلوبة'),
+  invoiceNumber: z.string().trim().min(1).nullable().optional(),
+  invoiceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  invoiceAmount: z.number().positive().nullable().optional(),
+  notes: z.string().trim().min(1).nullable().optional(),
+}).superRefine((data, ctx) => {
+  if (!data.beneficiaryId && !data.beneficiaryName) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'يرجى اختيار أو كتابة اسم المستفيد',
+      path: ['beneficiaryId'],
+    });
+  }
+});
+
+export const TodayTransactionUpdateSchema = z.object({
+  manualVoucherNumber: z.string().trim().min(1).nullable().optional(),
+  beneficiaryId: z.number().int().positive().optional(),
+  categoryId: z.number().int().positive().optional(),
+  projectId: z.number().int().positive().nullable().optional(),
+  projectUnitId: z.number().int().positive().nullable().optional(),
+  paymentMethodId: z.number().int().positive().optional(),
+  paymentReference: z.string().trim().min(1).nullable().optional(),
+  amount: z.number().positive('المبلغ يجب أن يكون أكبر من صفر').optional(),
+  description: z.string().trim().min(3, 'تفاصيل المصروف مطلوبة').optional(),
+  invoiceNumber: z.string().trim().min(1).nullable().optional(),
+  invoiceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  invoiceAmount: z.number().positive().nullable().optional(),
+  notes: z.string().trim().min(1).nullable().optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: 'يجب إرسال حقل واحد على الأقل للتعديل',
 });

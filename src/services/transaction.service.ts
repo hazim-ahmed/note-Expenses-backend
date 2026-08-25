@@ -33,12 +33,20 @@ export class TransactionService {
     const nextSeq = (count + 1).toString().padStart(6, '0');
     const systemReference = `EXP-${fiscalYear}-${nextSeq}`;
 
-    // Get default payment method
-    let paymentMethod = await prisma.paymentMethod.findFirst({ where: { isActive: true } });
-    if (!paymentMethod) {
-      paymentMethod = await prisma.paymentMethod.create({
-        data: { code: 'CASH', name: 'نقداً (كاش)', isActive: true },
+    let paymentMethod;
+    if (data.paymentMethodId) {
+      paymentMethod = await prisma.paymentMethod.findUnique({
+        where: { id: BigInt(data.paymentMethodId) },
       });
+      if (!paymentMethod || !paymentMethod.isActive) {
+        throw new AppError('طريقة الدفع المحددة غير موجودة أو غير مفعلة', 400, 'PAYMENT_METHOD_INVALID');
+      }
+    } else {
+      throw new AppError('يرجى تحديد طريقة دفع المصروف: كاش أو بنك', 400, 'PAYMENT_METHOD_REQUIRED');
+    }
+
+    if (paymentMethod.requiresReference && !data.paymentReference?.trim()) {
+      throw new AppError('مرجع الدفع أو رقم التحويل مطلوب لطريقة الدفع المحددة', 400, 'PAYMENT_REFERENCE_REQUIRED');
     }
 
     const todayDate = getRiyadhDate();
@@ -77,6 +85,7 @@ export class TransactionService {
           amount: data.amount,
           description: data.description,
           invoiceNumber: data.invoiceNumber || null,
+          paymentReference: data.paymentReference?.trim() || null,
           fiscalYear,
           status: 'APPROVED',
           notes: data.notes || null,
@@ -138,6 +147,24 @@ export class TransactionService {
       }
     }
 
+    let nextPaymentMethod = null;
+    if (data.paymentMethodId) {
+      nextPaymentMethod = await prisma.paymentMethod.findUnique({ where: { id: BigInt(data.paymentMethodId) } });
+      if (!nextPaymentMethod || !nextPaymentMethod.isActive) {
+        throw new AppError('طريقة الدفع المحددة غير موجودة أو غير مفعلة', 400, 'PAYMENT_METHOD_INVALID');
+      }
+    } else {
+      nextPaymentMethod = await prisma.paymentMethod.findUnique({ where: { id: existing.paymentMethodId } });
+    }
+
+    const nextPaymentReference = data.paymentReference !== undefined
+      ? data.paymentReference?.trim()
+      : existing.paymentReference;
+
+    if (nextPaymentMethod?.requiresReference && !nextPaymentReference) {
+      throw new AppError('مرجع الدفع أو رقم التحويل مطلوب لطريقة الدفع المحددة', 400, 'PAYMENT_REFERENCE_REQUIRED');
+    }
+
     const updated = await prisma.$transaction(async (tx) => {
       const res = await tx.expenseTransaction.update({
         where: { id: BigInt(id) },
@@ -149,12 +176,15 @@ export class TransactionService {
           amount: data.amount !== undefined ? data.amount : existing.amount,
           description: data.description !== undefined ? data.description : existing.description,
           invoiceNumber: data.invoiceNumber !== undefined ? data.invoiceNumber : existing.invoiceNumber,
+          paymentMethodId: data.paymentMethodId ? BigInt(data.paymentMethodId) : existing.paymentMethodId,
+          paymentReference: data.paymentReference !== undefined ? (data.paymentReference?.trim() || null) : existing.paymentReference,
           notes: data.notes !== undefined ? data.notes : existing.notes,
         },
         include: {
           beneficiary: true,
           category: true,
           project: true,
+          paymentMethod: true,
         },
       });
 
