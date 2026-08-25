@@ -38,6 +38,8 @@ router.delete('/today/transactions/:id', authenticateJWT, TodayController.delete
 // ─────────────────────────────────────────
 router.get('/journals', authenticateJWT, JournalController.getAll);
 router.get('/journals/:id', authenticateJWT, JournalController.getById);
+router.get('/journals/:id/export/excel', authenticateJWT, JournalController.exportExcel);
+router.get('/journals/:id/export/pdf', authenticateJWT, JournalController.exportPDF);
 router.post('/journals/:id/close', authenticateJWT, JournalController.close);
 router.post('/journals/:id/reopen', authenticateJWT, JournalController.reopen);
 
@@ -112,12 +114,27 @@ router.patch('/system-settings/expenses.project_requirement_mode', authenticateJ
 // 12. Reports (7 Reports)
 // ─────────────────────────────────────────
 router.get('/reports/daily-expenses', authenticateJWT, ReportController.getDailyExpenses);
+router.get('/reports/daily-expenses/export/excel', authenticateJWT, ReportController.exportDailyExpensesExcel);
+router.get('/reports/daily-expenses/export/pdf', authenticateJWT, ReportController.exportDailyExpensesPDF);
+
 router.get('/reports/by-project', authenticateJWT, ReportController.getExpensesByProject);
+router.get('/reports/by-project/export/excel', authenticateJWT, ReportController.exportExpensesByProjectExcel);
+router.get('/reports/by-project/export/pdf', authenticateJWT, ReportController.exportExpensesByProjectPDF);
+
 router.get('/reports/by-beneficiary', authenticateJWT, ReportController.getExpensesByBeneficiary);
 router.get('/reports/by-category', authenticateJWT, ReportController.getExpensesByCategory);
+
 router.get('/reports/unassigned-project-transactions', authenticateJWT, ReportController.getUnassignedProjectTransactions);
+router.get('/reports/unassigned-project-transactions/export/excel', authenticateJWT, ReportController.exportUnassignedTransactionsExcel);
+router.get('/reports/unassigned-project-transactions/export/pdf', authenticateJWT, ReportController.exportUnassignedTransactionsPDF);
+
 router.get('/reports/pending-invoices', authenticateJWT, ReportController.getPendingInvoices);
+router.get('/reports/pending-invoices/export/excel', authenticateJWT, ReportController.exportPendingInvoicesExcel);
+router.get('/reports/pending-invoices/export/pdf', authenticateJWT, ReportController.exportPendingInvoicesPDF);
+
 router.get('/reports/manual-vouchers', authenticateJWT, ReportController.getManualVouchers);
+router.get('/reports/manual-vouchers/export/excel', authenticateJWT, ReportController.exportManualVouchersExcel);
+router.get('/reports/manual-vouchers/export/pdf', authenticateJWT, ReportController.exportManualVouchersPDF);
 
 // ─────────────────────────────────────────
 // 13. Audit Logs

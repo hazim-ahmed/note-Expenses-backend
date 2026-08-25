@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { JournalService } from '../services/journal.service';
+import { ExportService } from '../services/export.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
@@ -40,6 +41,74 @@ export class JournalController {
       const userId = req.user!.id;
       const journal = await JournalService.reopenJournal(id, userId);
       return sendSuccess(res, journal, 'تم إعادة فتح اليومية بنجاح من قبل مسؤول النظام');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async exportExcel(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const journal = await JournalService.getJournalById(id);
+
+      const rows = (journal.transactions || []).map((tx: any, idx: number) => ({
+        index: idx + 1,
+        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        voucherNo: tx.manualVoucherNumber || tx.systemReference || '-',
+        date: tx.voucherDate ? new Date(tx.voucherDate).toISOString().slice(0, 10) : '',
+        beneficiary: tx.beneficiary?.name || '-',
+        details: tx.description || '-',
+        amount: Number(tx.amount) || 0,
+      }));
+
+      const dateStr = journal.journalDate ? new Date(journal.journalDate).toISOString().slice(0, 10) : '';
+
+      await ExportService.generateExcel(
+        {
+          title: `يومية المصروفات - ${journal.journalNumber}`,
+          journalNumber: journal.journalNumber,
+          cashboxName: journal.cashbox?.name,
+          reportDate: dateStr,
+          rows,
+          totalAmount: journal.totalAmount,
+        },
+        res,
+        `Journal_${journal.journalNumber}`
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async exportPDF(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const journal = await JournalService.getJournalById(id);
+
+      const rows = (journal.transactions || []).map((tx: any, idx: number) => ({
+        index: idx + 1,
+        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        voucherNo: tx.manualVoucherNumber || tx.systemReference || '-',
+        date: tx.voucherDate ? new Date(tx.voucherDate).toISOString().slice(0, 10) : '',
+        beneficiary: tx.beneficiary?.name || '-',
+        details: tx.description || '-',
+        amount: Number(tx.amount) || 0,
+      }));
+
+      const dateStr = journal.journalDate ? new Date(journal.journalDate).toLocaleDateString('ar-SA') : '';
+
+      await ExportService.generatePDF(
+        {
+          title: `يومية المصروفات اليومية (${journal.journalNumber})`,
+          journalNumber: journal.journalNumber,
+          cashboxName: journal.cashbox?.name,
+          reportDate: dateStr,
+          rows,
+          totalAmount: journal.totalAmount,
+        },
+        res,
+        `Journal_${journal.journalNumber}`
+      );
     } catch (error) {
       next(error);
     }
