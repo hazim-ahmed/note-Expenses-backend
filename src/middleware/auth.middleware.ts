@@ -53,7 +53,7 @@ export async function authenticateJWT(
     }
 
     const roles = user.userRoles.map((ur) => ur.role.name);
-    const permissions = Array.from(
+    const permissions: string[] = Array.from(
       new Set(
         user.userRoles.flatMap((ur) =>
           ur.role.rolePermissions.map((rp) => rp.permission.code)
