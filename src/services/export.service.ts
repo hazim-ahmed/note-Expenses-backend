@@ -4,11 +4,19 @@ import { Response } from 'express';
 
 export interface ExpenseExportRow {
   index?: number;
+  systemReference?: string;
   paymentMethod: string;
+  paymentReference?: string;
   voucherNo: string;
+  voucherBookNumber?: string;
   date: string;
   beneficiary: string;
+  category?: string;
+  project?: string;
+  invoiceNumber?: string;
+  invoiceStatus?: string;
   details: string;
+  notes?: string;
   amount: number;
 }
 
@@ -58,11 +66,19 @@ export class ExportService {
     // تعريف الأعمدة
     worksheet.columns = [
       { header: 'م', key: 'index', width: 8 },
-      { header: 'نوع الدفع', key: 'paymentMethod', width: 16 },
+      { header: 'الرقم المرجعي', key: 'systemReference', width: 20 },
       { header: 'رقم السند', key: 'voucherNo', width: 18 },
+      { header: 'دفتر السند', key: 'voucherBookNumber', width: 16 },
       { header: 'التاريخ', key: 'date', width: 14 },
       { header: 'المستفيد', key: 'beneficiary', width: 28 },
-      { header: 'التفاصيل', key: 'details', width: 36 },
+      { header: 'التصنيف', key: 'category', width: 22 },
+      { header: 'المشروع', key: 'project', width: 28 },
+      { header: 'نوع الدفع', key: 'paymentMethod', width: 16 },
+      { header: 'مرجع الدفع', key: 'paymentReference', width: 20 },
+      { header: 'رقم الفاتورة', key: 'invoiceNumber', width: 18 },
+      { header: 'حالة الفاتورة', key: 'invoiceStatus', width: 18 },
+      { header: 'التفاصيل', key: 'details', width: 38 },
+      { header: 'ملاحظات', key: 'notes', width: 32 },
       { header: 'المبلغ (ر.س)', key: 'amount', width: 18 },
     ];
 
@@ -94,11 +110,19 @@ export class ExportService {
 
       const row = worksheet.addRow({
         index: idx + 1,
-        paymentMethod: item.paymentMethod || '-',
+        systemReference: item.systemReference || '-',
         voucherNo: item.voucherNo || '-',
+        voucherBookNumber: item.voucherBookNumber || '-',
         date: item.date || '-',
         beneficiary: item.beneficiary || '-',
+        category: item.category || '-',
+        project: item.project || '-',
+        paymentMethod: item.paymentMethod || '-',
+        paymentReference: item.paymentReference || '-',
+        invoiceNumber: item.invoiceNumber || '-',
+        invoiceStatus: item.invoiceStatus || '-',
         details: item.details || '-',
+        notes: item.notes || '-',
         amount: amt,
       });
 
@@ -107,7 +131,8 @@ export class ExportService {
         cell.font = { name: 'Arial', size: 10 };
         cell.alignment = {
           vertical: 'middle',
-          horizontal: colNumber === 5 || colNumber === 6 ? 'right' : 'center',
+          horizontal: [6, 7, 8, 13, 14].includes(colNumber) ? 'right' : 'center',
+          wrapText: true,
         };
         cell.border = {
           top: { style: 'thin', color: { argb: 'FFE0E0E0' } },
@@ -115,7 +140,7 @@ export class ExportService {
           bottom: { style: 'thin', color: { argb: 'FFE0E0E0' } },
           right: { style: 'thin', color: { argb: 'FFE0E0E0' } },
         };
-        if (colNumber === 7) {
+        if (colNumber === 15) {
           cell.numFmt = '#,##0.00';
         }
       });
@@ -125,16 +150,24 @@ export class ExportService {
     const totalRowIndex = options.rows.length + 2;
     const totalRow = worksheet.addRow({
       index: '',
-      paymentMethod: '',
+      systemReference: '',
       voucherNo: '',
+      voucherBookNumber: '',
       date: '',
       beneficiary: '',
+      category: '',
+      project: '',
+      paymentMethod: '',
+      paymentReference: '',
+      invoiceNumber: '',
+      invoiceStatus: '',
       details: 'إجمالي المصروفات',
+      notes: '',
       amount: options.totalAmount !== undefined ? options.totalAmount : totalSum,
     });
 
     totalRow.height = 26;
-    worksheet.mergeCells(`A${totalRowIndex}:F${totalRowIndex}`);
+    worksheet.mergeCells(`A${totalRowIndex}:N${totalRowIndex}`);
 
     totalRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
       cell.font = { name: 'Arial', bold: true, size: 11, color: { argb: 'FF1F4E78' } };
@@ -149,7 +182,7 @@ export class ExportService {
         left: { style: 'thin' },
         right: { style: 'thin' },
       };
-      if (colNumber <= 6) {
+      if (colNumber <= 14) {
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
       } else {
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -184,11 +217,19 @@ export class ExportService {
           (item, idx) => `
         <tr>
           <td style="text-align: center;">${idx + 1}</td>
-          <td style="text-align: center;">${item.paymentMethod || '-'}</td>
+          <td style="text-align: center; font-family: monospace;">${item.systemReference || '-'}</td>
           <td style="text-align: center; font-family: monospace;">${item.voucherNo || '-'}</td>
+          <td style="text-align: center;">${item.voucherBookNumber || '-'}</td>
           <td style="text-align: center;">${item.date || '-'}</td>
           <td>${item.beneficiary || '-'}</td>
+          <td>${item.category || '-'}</td>
+          <td>${item.project || '-'}</td>
+          <td style="text-align: center;">${item.paymentMethod || '-'}</td>
+          <td style="text-align: center;">${item.paymentReference || '-'}</td>
+          <td style="text-align: center;">${item.invoiceNumber || '-'}</td>
+          <td style="text-align: center;">${item.invoiceStatus || '-'}</td>
           <td>${item.details || '-'}</td>
+          <td>${item.notes || '-'}</td>
           <td style="text-align: center; font-weight: bold;">${(Number(item.amount) || 0).toLocaleString('en-US', {
             minimumFractionDigits: 2,
           })}</td>
@@ -214,7 +255,7 @@ export class ExportService {
               padding: 24px;
               color: #2c3e50;
               background-color: #ffffff;
-              font-size: 12px;
+              font-size: 9px;
             }
             .header-container {
               display: flex;
@@ -245,13 +286,15 @@ export class ExportService {
             }
             th, td {
               border: 1px solid #dcdde1;
-              padding: 7px 9px;
+              padding: 5px 6px;
+              vertical-align: top;
+              word-break: break-word;
             }
             th {
               background-color: #1f4e78;
               color: #ffffff;
               font-weight: 700;
-              font-size: 11px;
+              font-size: 9px;
               text-align: center;
             }
             tbody tr:nth-child(even) {
@@ -307,19 +350,27 @@ export class ExportService {
           <table>
             <thead>
               <tr>
-                <th style="width: 5%;">م</th>
-                <th style="width: 14%;">نوع الدفع</th>
-                <th style="width: 15%;">رقم السند</th>
-                <th style="width: 13%;">التاريخ</th>
-                <th style="width: 23%;">المستفيد</th>
-                <th style="width: 18%;">التفاصيل</th>
-                <th style="width: 12%;">المبلغ (ر.س)</th>
+                <th>م</th>
+                <th>الرقم المرجعي</th>
+                <th>رقم السند</th>
+                <th>دفتر السند</th>
+                <th>التاريخ</th>
+                <th>المستفيد</th>
+                <th>التصنيف</th>
+                <th>المشروع</th>
+                <th>نوع الدفع</th>
+                <th>مرجع الدفع</th>
+                <th>رقم الفاتورة</th>
+                <th>حالة الفاتورة</th>
+                <th>التفاصيل</th>
+                <th>ملاحظات</th>
+                <th>المبلغ</th>
               </tr>
             </thead>
             <tbody>
-              ${tableRowsHtml || '<tr><td colspan="7" style="text-align: center; padding: 20px;">لا توجد مصروفات مسجلة</td></tr>'}
+              ${tableRowsHtml || '<tr><td colspan="15" style="text-align: center; padding: 20px;">لا توجد مصروفات مسجلة</td></tr>'}
               <tr class="total-row">
-                <td colspan="6" style="text-align: center;">إجمالي المصروفات</td>
+                <td colspan="14" style="text-align: center;">إجمالي المصروفات</td>
                 <td style="text-align: center;">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
               </tr>
             </tbody>
@@ -352,6 +403,7 @@ export class ExportService {
 
       const pdfBuffer = await page.pdf({
         format: 'A4',
+        landscape: true,
         printBackground: true,
         margin: {
           top: '15mm',

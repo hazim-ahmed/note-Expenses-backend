@@ -23,11 +23,19 @@ export class ReportController {
 
       const rows = (data.transactions || []).map((tx: any, idx: number) => ({
         index: idx + 1,
-        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        systemReference: tx.systemReference || '-',
         voucherNo: tx.manualVoucherNumber || tx.systemReference || '-',
+        voucherBookNumber: tx.voucherBookNumber || '-',
         date: tx.voucherDate ? new Date(tx.voucherDate).toISOString().slice(0, 10) : data.date,
         beneficiary: tx.beneficiary?.name || '-',
+        category: tx.category?.name || '-',
+        project: tx.project?.projectName || 'غير مربوط',
+        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        paymentReference: tx.paymentReference || '-',
+        invoiceNumber: tx.invoiceNumber || '-',
+        invoiceStatus: tx.invoiceStatus || '-',
         details: tx.description || '-',
+        notes: tx.notes || '-',
         amount: Number(tx.amount) || 0,
       }));
 
@@ -53,11 +61,19 @@ export class ReportController {
 
       const rows = (data.transactions || []).map((tx: any, idx: number) => ({
         index: idx + 1,
-        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        systemReference: tx.systemReference || '-',
         voucherNo: tx.manualVoucherNumber || tx.systemReference || '-',
+        voucherBookNumber: tx.voucherBookNumber || '-',
         date: tx.voucherDate ? new Date(tx.voucherDate).toISOString().slice(0, 10) : data.date,
         beneficiary: tx.beneficiary?.name || '-',
+        category: tx.category?.name || '-',
+        project: tx.project?.projectName || 'غير مربوط',
+        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        paymentReference: tx.paymentReference || '-',
+        invoiceNumber: tx.invoiceNumber || '-',
+        invoiceStatus: tx.invoiceStatus || '-',
         details: tx.description || '-',
+        notes: tx.notes || '-',
         amount: Number(tx.amount) || 0,
       }));
 

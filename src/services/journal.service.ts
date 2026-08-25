@@ -80,53 +80,30 @@ export class JournalService {
     });
 
     if (!journal) {
-      try {
-        journal = await prisma.expenseJournal.create({
-          data: {
-            journalNumber,
-            journalDate: todayDate,
-            cashboxId: cashbox.id,
-            status: 'OPEN',
-            preparedBy: BigInt(userId),
-            notes: `يومية اليوم التلقائية بتاريخ ${todayStr}`,
-          },
-          include: {
-            transactions: {
-              where: { deletedAt: null },
-              include: {
-                beneficiary: true,
-                category: true,
-                project: true,
-                paymentMethod: true,
-                creator: { select: { id: true, username: true, fullName: true } },
-              },
-              orderBy: { id: 'desc' },
+      journal = await prisma.expenseJournal.create({
+        data: {
+          journalNumber,
+          journalDate: todayDate,
+          cashboxId: cashbox.id,
+          status: 'OPEN',
+          preparedBy: BigInt(userId),
+          notes: `يومية اليوم التلقائية بتاريخ ${todayStr}`,
+        },
+        include: {
+          transactions: {
+            where: { deletedAt: null },
+            include: {
+              beneficiary: true,
+              category: true,
+              project: true,
+              paymentMethod: true,
+              creator: { select: { id: true, username: true, fullName: true } },
             },
+            orderBy: { id: 'desc' },
           },
-        });
-      } catch (error: any) {
-        if (error?.code !== 'P2002') throw error;
-
-        journal = await prisma.expenseJournal.findUnique({
-          where: { journalNumber },
-          include: {
-            transactions: {
-              where: { deletedAt: null },
-              include: {
-                beneficiary: true,
-                category: true,
-                project: true,
-                paymentMethod: true,
-                creator: { select: { id: true, username: true, fullName: true } },
-              },
-              orderBy: { id: 'desc' },
-            },
-          },
-        });
-      }
+        },
+      });
     }
-
-    if (!journal) throw new AppError('تعذر فتح يومية اليوم التلقائية', 500, 'JOURNAL_CREATE_FAILED');
 
     const totalAmount = journal.transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
 
