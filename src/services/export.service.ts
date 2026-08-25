@@ -379,9 +379,9 @@ export class ExportService {
             .col-amount {
               text-align: left;
               direction: ltr;
-              font-weight: 800;
+              font-weight: 900;
               font-family: 'Consolas', 'Courier New', monospace;
-              font-size: 9pt;
+              font-size: 10.5pt;
               color: #000000;
               white-space: nowrap;
             }
@@ -394,9 +394,9 @@ export class ExportService {
               border-top: 2px solid #000000 !important;
               border-bottom: 4px double #000000 !important;
               font-weight: 900 !important;
-              font-size: 10pt !important;
+              font-size: 11pt !important;
               color: #000000 !important;
-              padding: 7px 8px;
+              padding: 8px 8px;
             }
 
             /* قسم التواقيع والاعتمادات الرسمية أسفل التقرير */
