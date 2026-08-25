@@ -212,30 +212,25 @@ export class ExportService {
           ? options.totalAmount
           : options.rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-      const tableRowsHtml = options.rows
-        .map(
-          (item, idx) => `
-        <tr>
-          <td class="col-center">${idx + 1}</td>
-          <td class="col-center col-mono">${item.systemReference || '-'}</td>
-          <td class="col-center col-mono">${item.voucherNo || '-'}</td>
-          <td class="col-center">${item.voucherBookNumber || '-'}</td>
-          <td class="col-center">${item.date || '-'}</td>
-          <td class="col-right">${item.beneficiary || '-'}</td>
-          <td class="col-right">${item.category || '-'}</td>
-          <td class="col-right">${item.project || '-'}</td>
-          <td class="col-center">${item.paymentMethod || '-'}</td>
-          <td class="col-center">${item.paymentReference || '-'}</td>
-          <td class="col-center">${item.invoiceNumber || '-'}</td>
-          <td class="col-right">${item.details || '-'}</td>
-          <td class="col-center">${item.notes || '-'}</td>
-          <td class="col-amount">${(Number(item.amount) || 0).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-          })}</td>
-        </tr>
-      `
-        )
-        .join('');
+      const tableRowsHtml = options.rows.length === 0
+        ? `<tr><td colspan="9" style="text-align: center; padding: 30px; font-size: 11pt; color: #475569; font-weight: bold;">لا توجد مصروفات خلال الفترة المحددة</td></tr>`
+        : options.rows
+            .map(
+              (item, idx) => `
+            <tr>
+              <td class="col-center font-mono">${idx + 1}</td>
+              <td class="col-center">${item.date || '—'}</td>
+              <td class="col-right col-desc">${item.details || '—'}</td>
+              <td class="col-right">${item.category || '—'}</td>
+              <td class="col-right">${item.project || '—'}</td>
+              <td class="col-center font-mono">${item.voucherNo || item.systemReference || '—'}</td>
+              <td class="col-center font-mono">${item.invoiceNumber || '—'}</td>
+              <td class="col-amount">${(Number(item.amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</td>
+              <td class="col-right col-notes">${item.notes || '—'}</td>
+            </tr>
+          `
+            )
+            .join('');
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -243,278 +238,298 @@ export class ExportService {
         <head>
           <meta charset="UTF-8">
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;600;700;800&family=Cairo:wght@400;600;700;800&display=swap');
             
             * {
               box-sizing: border-box;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
+            @page {
+              size: A4 landscape;
+              margin: 12mm 15mm;
+            }
             body {
               margin: 0;
-              padding: 12px;
-              color: #0f172a;
+              padding: 0;
+              color: #111827;
               background-color: #ffffff;
-              font-family: 'Cairo', 'Traditional Arabic', 'Segoe UI', Tahoma, sans-serif;
-              font-size: 8.5px;
-              line-height: 1.3;
+              font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+              font-size: 9.5pt;
+              line-height: 1.4;
             }
-            .document-frame {
-              border: 2px solid #0f172a;
-              padding: 12px;
-              position: relative;
-            }
-            .top-header {
+
+            /* رأس التقرير */
+            .report-header {
               display: flex;
               justify-content: space-between;
               align-items: flex-start;
-              border-bottom: 2px solid #0f172a;
-              padding-bottom: 8px;
-              margin-bottom: 10px;
-            }
-            .org-info {
-              text-align: right;
-              width: 30%;
-            }
-            .org-title-main {
-              font-size: 12px;
-              font-weight: 800;
-              color: #0f172a;
-              margin: 0 0 2px 0;
-            }
-            .org-subtitle {
-              font-size: 8.5px;
-              color: #475569;
-              font-weight: 600;
-            }
-            .doc-title-center {
-              text-align: center;
-              width: 40%;
-            }
-            .doc-title-main {
-              font-size: 15px;
-              font-weight: 900;
-              color: #0f172a;
-              margin: 0 0 2px 0;
-              letter-spacing: 0.5px;
-            }
-            .doc-badge {
-              display: inline-block;
-              font-size: 8px;
-              font-weight: 700;
-              padding: 2px 8px;
-              background: #f1f5f9;
-              border: 1px solid #94a3b8;
-              border-radius: 4px;
-              color: #0f172a;
-            }
-            .meta-info-left {
-              text-align: left;
-              width: 30%;
-              font-size: 8px;
-              color: #334155;
-            }
-            .meta-info-left table {
-              width: auto;
-              margin-left: 0;
-              margin-right: auto;
-              border: none;
-              font-size: 8px;
-            }
-            .meta-info-left td {
-              border: none;
-              padding: 1px 3px;
-            }
-
-            .ledger-info-bar {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 10px;
-              background-color: #f8fafc;
-            }
-            .ledger-info-bar td {
-              border: 1px solid #cbd5e1;
-              padding: 4px 6px;
-              font-size: 8.5px;
-            }
-            .ledger-info-bar td strong {
-              color: #0f172a;
-            }
-
-            table.ledger-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 12px;
-            }
-            table.ledger-table th, table.ledger-table td {
-              border: 1px solid #475569;
-              padding: 3.5px 4.5px;
-              vertical-align: middle;
-              word-break: break-word;
-            }
-            table.ledger-table th {
-              background-color: #0f172a !important;
-              color: #ffffff !important;
-              font-weight: 800;
-              font-size: 8px;
-              text-align: center;
-            }
-            table.ledger-table tbody tr:nth-child(even) {
-              background-color: #f8fafc;
-            }
-            .col-center { text-align: center; }
-            .col-right { text-align: right; }
-            .col-mono { font-family: 'Consolas', 'Courier New', monospace; font-size: 8px; font-weight: bold; }
-            .col-amount { text-align: center; font-weight: 800; font-family: 'Consolas', 'Courier New', monospace; font-size: 8.5px; color: #0f172a; }
-
-            .total-row {
-              background-color: #e2e8f0 !important;
-              font-weight: 900;
-              color: #0f172a;
-            }
-            .total-row td {
-              border-top: 2px solid #0f172a !important;
-              border-bottom: 3px double #0f172a !important;
-              padding: 5px 6px;
-              font-size: 9px;
-            }
-
-            .signatures-box-container {
-              display: flex;
-              justify-content: space-between;
-              gap: 10px;
-              margin-top: 15px;
-              page-break-inside: avoid;
-            }
-            .sig-card {
-              flex: 1;
-              border: 1px solid #334155;
-              border-radius: 4px;
-              padding: 6px 8px;
-              text-align: center;
-              background: #ffffff;
-            }
-            .sig-card-header {
-              font-size: 9px;
-              font-weight: 800;
-              color: #0f172a;
-              border-bottom: 1px solid #cbd5e1;
-              padding-bottom: 3px;
+              border-bottom: 2px solid #1E293B;
+              padding-bottom: 10px;
               margin-bottom: 14px;
             }
-            .sig-card-body {
-              font-size: 8px;
-              color: #475569;
+            .header-org {
+              width: 32%;
               text-align: right;
-              line-height: 1.6;
             }
-            .sig-line {
-              border-bottom: 1px dotted #64748b;
-              display: inline-block;
-              width: 55%;
+            .org-name {
+              font-size: 11pt;
+              font-weight: 700;
+              color: #0F172A;
+              margin: 0 0 2px 0;
+            }
+            .org-dept {
+              font-size: 9pt;
+              color: #475569;
+            }
+            .header-center {
+              width: 36%;
+              text-align: center;
+            }
+            .report-main-title {
+              font-size: 18pt;
+              font-weight: 800;
+              color: #0F172A;
+              margin: 0 0 4px 0;
+              letter-spacing: -0.5px;
+            }
+            .report-sub-title {
+              font-size: 9.5pt;
+              color: #334155;
+              font-weight: 600;
+            }
+            .header-meta {
+              width: 32%;
+              text-align: left;
+              font-size: 8.5pt;
+              color: #475569;
+            }
+            .header-meta table {
+              margin-left: 0;
+              margin-right: auto;
+              border-collapse: collapse;
+            }
+            .header-meta td {
+              padding: 1px 4px;
             }
 
-            .doc-footer {
-              margin-top: 10px;
-              border-top: 1px solid #cbd5e1;
-              padding-top: 4px;
+            /* ملخص التقرير المالي */
+            .summary-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 14px;
+              background-color: #F8FAFC;
+              border: 1px solid #CBD5E1;
+            }
+            .summary-table td {
+              border: 1px solid #CBD5E1;
+              padding: 6px 10px;
+              font-size: 9.5pt;
+            }
+            .summary-table strong {
+              color: #0F172A;
+            }
+
+            /* تصميم جدول المصروفات */
+            table.expense-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 16px;
+            }
+            table.expense-table thead {
+              display: table-header-group;
+            }
+            table.expense-table tr {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+            table.expense-table th {
+              background-color: #1F2937 !important;
+              color: #FFFFFF !important;
+              font-weight: 700;
+              font-size: 10pt;
+              padding: 7px 8px;
+              border: 1px solid #CBD5E1;
+              text-align: center;
+            }
+            table.expense-table td {
+              border: 1px solid #CBD5E1;
+              padding: 6px 8px;
+              font-size: 9pt;
+              color: #1F2937;
+              vertical-align: middle;
+            }
+            table.expense-table tbody tr:nth-child(even) {
+              background-color: #F8FAFC;
+            }
+
+            .col-center { text-align: center; }
+            .col-right { text-align: right; }
+            .font-mono { font-family: 'Consolas', 'Courier New', monospace; font-weight: 600; font-size: 8.5pt; }
+            .col-desc { word-break: break-word; }
+            .col-notes { word-break: break-word; font-size: 8.5pt; color: #4B5563; }
+            .col-amount {
+              text-align: left;
+              direction: ltr;
+              font-weight: 700;
+              font-family: 'Consolas', 'Courier New', monospace;
+              font-size: 9.5pt;
+              color: #0F172A;
+              white-space: nowrap;
+            }
+
+            /* صف الإجمالي الكلي */
+            .total-row {
+              background-color: #EEF2F6 !important;
+            }
+            .total-row td {
+              border-top: 2px solid #1E293B !important;
+              border-bottom: 3px double #1E293B !important;
+              font-weight: 800 !important;
+              font-size: 10.5pt !important;
+              color: #0F172A !important;
+              padding: 8px 10px;
+            }
+
+            /* قسم التواقيع والاعتمادات الرسمية الثلاثية */
+            .signatures-container {
               display: flex;
               justify-content: space-between;
-              font-size: 7px;
-              color: #64748b;
+              gap: 16px;
+              margin-top: 24px;
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+            .sig-box {
+              flex: 1;
+              border: 1px solid #94A3B8;
+              padding: 8px 12px;
+              text-align: center;
+              background-color: #FFFFFF;
+            }
+            .sig-box-title {
+              font-size: 9.5pt;
+              font-weight: 700;
+              color: #0F172A;
+              border-bottom: 1px solid #E2E8F0;
+              padding-bottom: 4px;
+              margin-bottom: 18px;
+            }
+            .sig-box-content {
+              font-size: 8.5pt;
+              color: #475569;
+              text-align: right;
+              line-height: 1.8;
+            }
+            .sig-dotted-line {
+              border-bottom: 1px dotted #94A3B8;
+              display: inline-block;
+              width: 60%;
+            }
+
+            /* التذييل */
+            .report-footer {
+              margin-top: 16px;
+              border-top: 1px solid #CBD5E1;
+              padding-top: 6px;
+              display: flex;
+              justify-content: space-between;
+              font-size: 8pt;
+              color: #64748B;
             }
           </style>
         </head>
         <body>
-          <div class="document-frame">
-            <div class="top-header">
-              <div class="org-info">
-                <div class="org-title-main">نظام إدارة المصروفات وسندات الصرف</div>
-                <div class="org-subtitle">إدارة الشؤون المالية والحسابات العامة</div>
-              </div>
-              <div class="doc-title-center">
-                <div class="doc-title-main">كشف بيان المصروفات واليومية العامة</div>
-                <div class="doc-badge">${options.title || 'سجل اليومية المحاسبية المعتمدة'}</div>
-              </div>
-              <div class="meta-info-left">
-                <table>
-                  <tr><td><strong>رقم الكشف:</strong></td><td class="col-mono">${options.journalNumber || 'JRN-' + new Date().toISOString().slice(0, 10).replace(/-/g, '')}</td></tr>
-                  <tr><td><strong>تاريخ الإصدار:</strong></td><td>${reportDate}</td></tr>
-                  <tr><td><strong>وقت الطباعة:</strong></td><td>${new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</td></tr>
-                </table>
-              </div>
+          <!-- 1. رأس التقرير -->
+          <div class="report-header">
+            <div class="header-org">
+              <div class="org-name">نظام إدارة المصروفات وسندات الصرف</div>
+              <div class="org-dept">إدارة الشؤون المالية والحسابات العامة</div>
             </div>
+            <div class="header-center">
+              <h1 class="report-main-title">« دفتر المصروفات »</h1>
+              <div class="report-sub-title">${options.title || 'سجل المصروفات واليومية العامة'}</div>
+            </div>
+            <div class="header-meta">
+              <table>
+                <tr><td><strong>رقم الكشف:</strong></td><td class="font-mono">${options.journalNumber || 'JRN-' + new Date().toISOString().slice(0, 10).replace(/-/g, '')}</td></tr>
+                <tr><td><strong>تاريخ التقرير:</strong></td><td>${reportDate}</td></tr>
+                <tr><td><strong>تاريخ ووقت الإنشاء:</strong></td><td>${new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</td></tr>
+              </table>
+            </div>
+          </div>
 
-            <table class="ledger-info-bar">
+          <!-- 2. ملخص التقرير المالي -->
+          <table class="summary-table">
+            <tr>
+              <td style="width: 25%;"><strong>عدد المصروفات:</strong> <span class="font-mono">${options.rows.length}</span> سند</td>
+              <td style="width: 25%;"><strong>إجمالي قيمة المصروفات:</strong> <strong>${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</strong></td>
+              <td style="width: 25%;"><strong>تاريخ بداية الفترة:</strong> ${reportDate}</td>
+              <td style="width: 25%;"><strong>الصندوق المالي:</strong> ${options.cashboxName || 'الصندوق الرئيسي'}</td>
+            </tr>
+          </table>
+
+          <!-- 3. جدول المصروفات الرسمي -->
+          <table class="expense-table">
+            <thead>
               <tr>
-                <td style="width: 25%;"><strong>الصندوق المالي:</strong> ${options.cashboxName || 'الصندوق الرئيسي'}</td>
-                <td style="width: 25%;"><strong>تاريخ اليومية:</strong> ${reportDate}</td>
-                <td style="width: 25%;"><strong>إجمالي السندات:</strong> <span class="col-mono">${options.rows.length} سند</span></td>
-                <td style="width: 25%;"><strong>الحالة:</strong> مقفلة ومعتمدة رسمياً</td>
+                <th style="width: 4%;">#</th>
+                <th style="width: 9%;">تاريخ المصروف</th>
+                <th style="width: 22%;">بيان المصروف</th>
+                <th style="width: 11%;">التصنيف</th>
+                <th style="width: 13%;">مركز التكلفة (المشروع)</th>
+                <th style="width: 10%;">رقم السند</th>
+                <th style="width: 8%;">رقم الفاتورة</th>
+                <th style="width: 11%;">المبلغ</th>
+                <th style="width: 12%;">الملاحظات</th>
               </tr>
-            </table>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+              ${options.rows.length > 0 ? `
+              <tr class="total-row">
+                <td colspan="7" style="text-align: center;">الإجمالي الكلي</td>
+                <td class="col-amount" style="text-align: left; font-size: 10.5pt; font-weight: 800;">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</td>
+                <td></td>
+              </tr>
+              ` : ''}
+            </tbody>
+          </table>
 
-            <table class="ledger-table">
-              <thead>
-                <tr>
-                  <th style="width: 3%;">م</th>
-                  <th style="width: 9%;">الرقم المرجعي</th>
-                  <th style="width: 7%;">رقم السند</th>
-                  <th style="width: 7%;">دفتر السند</th>
-                  <th style="width: 7%;">التاريخ</th>
-                  <th style="width: 12%;">المستفيد</th>
-                  <th style="width: 9%;">التصنيف</th>
-                  <th style="width: 11%;">المشروع</th>
-                  <th style="width: 6%;">نوع الدفع</th>
-                  <th style="width: 7%;">مرجع الدفع</th>
-                  <th style="width: 6%;">رقم الفاتورة</th>
-                  <th style="width: 10%;">التفاصيل والبيان</th>
-                  <th style="width: 6%;">ملاحظات</th>
-                  <th style="width: 8%;">المبلغ (ر.س)</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${tableRowsHtml || '<tr><td colspan="14" style="text-align: center; padding: 12px; font-weight: bold;">لا توجد مصروفات مسجلة في هذا الكشف</td></tr>'}
-                <tr class="total-row">
-                  <td colspan="13" style="text-align: center; font-size: 9px;">الإجمالي العام للمصروفات وسندات الصرف</td>
-                  <td class="col-amount" style="font-size: 10px; text-align: center;">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="signatures-box-container">
-              <div class="sig-card">
-                <div class="sig-card-header">إعداد: أمين الصندوق / المنظم</div>
-                <div class="sig-card-body">
-                  <div>الاسم: <span class="sig-line"></span></div>
-                  <div style="margin-top: 5px;">التوقيع: <span class="sig-line"></span></div>
-                  <div style="margin-top: 5px;">التاريخ: .... / .... / 2026 م</div>
-                </div>
-              </div>
-
-              <div class="sig-card">
-                <div class="sig-card-header">تدقيق: المشرف المالي / المراجع</div>
-                <div class="sig-card-body">
-                  <div>الاسم: <span class="sig-line"></span></div>
-                  <div style="margin-top: 5px;">التوقيع: <span class="sig-line"></span></div>
-                  <div style="margin-top: 5px;">التاريخ: .... / .... / 2026 م</div>
-                </div>
-              </div>
-
-              <div class="sig-card">
-                <div class="sig-card-header">اعتماد: المدير العام / الإدارة</div>
-                <div class="sig-card-body">
-                  <div>الاعتماد: <span class="sig-line"></span></div>
-                  <div style="margin-top: 5px;">الختم الرسمي: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</div>
-                  <div style="margin-top: 5px;">التاريخ: .... / .... / 2026 م</div>
-                </div>
+          <!-- 4. قسم التواقيع والاعتمادات الرسمية الثلاثية -->
+          <div class="signatures-container">
+            <div class="sig-box">
+              <div class="sig-box-title">إعداد: أمين الصندوق / المحاسب</div>
+              <div class="sig-box-content">
+                <div>الاسم: <span class="sig-dotted-line"></span></div>
+                <div style="margin-top: 6px;">التوقيع: <span class="sig-dotted-line"></span></div>
+                <div style="margin-top: 6px;">التاريخ: .... / .... / 2026 م</div>
               </div>
             </div>
 
-            <div class="doc-footer">
-              <div>* مستند محاسبي صادر آلياً من نظام إدارة المصروفات وسندات الصرف.</div>
-              <div>صفحة 1 من 1</div>
+            <div class="sig-box">
+              <div class="sig-box-title">تدقيق: المشرف المالي / المراجع</div>
+              <div class="sig-box-content">
+                <div>الاسم: <span class="sig-dotted-line"></span></div>
+                <div style="margin-top: 6px;">التوقيع: <span class="sig-dotted-line"></span></div>
+                <div style="margin-top: 6px;">التاريخ: .... / .... / 2026 م</div>
+              </div>
             </div>
+
+            <div class="sig-box">
+              <div class="sig-box-title">اعتماد: المدير العام / الإدارة</div>
+              <div class="sig-box-content">
+                <div>الاعتماد: <span class="sig-dotted-line"></span></div>
+                <div style="margin-top: 6px;">الختم الرسمي: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</div>
+                <div style="margin-top: 6px;">التاريخ: .... / .... / 2026 م</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. التذييل -->
+          <div class="report-footer">
+            <div>* مستند محاسبي صادر آلياً من نظام إدارة المصروفات وسندات الصرف.</div>
+            <div>صفحة 1 من 1</div>
           </div>
         </body>
         </html>
@@ -533,10 +548,10 @@ export class ExportService {
         landscape: true,
         printBackground: true,
         margin: {
-          top: '10mm',
-          bottom: '10mm',
-          left: '8mm',
-          right: '8mm',
+          top: '12mm',
+          bottom: '12mm',
+          left: '15mm',
+          right: '15mm',
         },
       });
 
