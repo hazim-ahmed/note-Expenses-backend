@@ -376,17 +376,30 @@ export class ExportService {
             </tbody>
           </table>
 
-          <!-- خانات التوقيع والاعتماد -->
-          <div class="signatures-section">
-            <div class="sig-box">
-              <div class="sig-space"></div>
-              <div class="sig-line"></div>
-              <div class="sig-title">توقيع المشرف</div>
+          <!-- خانات التوقيع والاعتماد الرسمية الثلاثية -->
+          <div class="signatures-section" style="margin-top: 40px; display: flex; justify-content: space-between; padding: 0 20px; page-break-inside: avoid;">
+            <div class="sig-box" style="text-align: center; width: 200px;">
+              <div style="font-weight: 700; font-size: 11px; color: #1e293b; margin-bottom: 25px;">إعداد: أمين الصندوق / المنظم</div>
+              <div style="border-top: 1px solid #334155; padding-top: 4px; font-size: 10px; color: #64748b;">
+                <div>الاسم: ...................................</div>
+                <div style="margin-top: 3px;">التوقيع: .................................</div>
+              </div>
             </div>
-            <div class="sig-box">
-              <div class="sig-space"></div>
-              <div class="sig-line"></div>
-              <div class="sig-title">اعتماد الإدارة</div>
+
+            <div class="sig-box" style="text-align: center; width: 200px;">
+              <div style="font-weight: 700; font-size: 11px; color: #1e293b; margin-bottom: 25px;">تدقيق: المشرف المالي / المراجع</div>
+              <div style="border-top: 1px solid #334155; padding-top: 4px; font-size: 10px; color: #64748b;">
+                <div>الاسم: ...................................</div>
+                <div style="margin-top: 3px;">التوقيع: .................................</div>
+              </div>
+            </div>
+
+            <div class="sig-box" style="text-align: center; width: 200px;">
+              <div style="font-weight: 700; font-size: 11px; color: #1e293b; margin-bottom: 25px;">اعتماد: المدير العام / الإدارة</div>
+              <div style="border-top: 1px solid #334155; padding-top: 4px; font-size: 10px; color: #64748b;">
+                <div>الاعتماد: ..............................</div>
+                <div style="margin-top: 3px;">الختم الرسمي: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</div>
+              </div>
             </div>
           </div>
         </body>
