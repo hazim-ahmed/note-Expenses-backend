@@ -1,38 +1,7 @@
 import ExcelJS from 'exceljs';
 import puppeteer from 'puppeteer';
 import { Response } from 'express';
-import fs from 'fs';
-import path from 'path';
-
-function getLogoBase64(): string {
-  try {
-    const candidatePaths = [
-      path.join(process.cwd(), 'assets', 'logo.png'),
-      path.join(process.cwd(), 'public', 'logo.png'),
-      path.join(process.cwd(), 'logo.png'),
-      path.join(__dirname, '..', 'assets', 'logo.png'),
-      path.join(__dirname, '..', '..', 'assets', 'logo.png'),
-      path.join(__dirname, '..', '..', '..', 'assets', 'logo.png'),
-      path.join(__dirname, '..', 'logo.png'),
-      path.join(__dirname, '..', '..', 'logo.png'),
-      path.join(__dirname, '..', '..', '..', 'logo.png'),
-      path.join(__dirname, '..', '..', '..', '..', 'logo.png'),
-      path.resolve('assets/logo.png'),
-      path.resolve('public/logo.png'),
-      path.resolve('logo.png'),
-      'C:\\Users\\Silver_Bullet\\Desktop\\exoen_man\\logo.png',
-    ];
-    for (const p of candidatePaths) {
-      if (fs.existsSync(p)) {
-        const fileBuffer = fs.readFileSync(p);
-        return `data:image/png;base64,${fileBuffer.toString('base64')}`;
-      }
-    }
-  } catch (err) {
-    console.error('Error reading logo file for PDF export:', err);
-  }
-  return '';
-}
+import { LOGO_BASE64 } from './logo.constant';
 
 export interface ExpenseExportRow {
   index?: number;
@@ -238,7 +207,6 @@ export class ExportService {
   static async generatePDF(options: ExportReportOptions, res: Response, filenamePrefix = 'expenses') {
     let browser = null;
     try {
-      const logoBase64 = getLogoBase64();
       const reportDate = options.reportDate || new Date().toLocaleDateString('ar-SA');
       const totalAmount =
         options.totalAmount !== undefined
@@ -485,7 +453,7 @@ export class ExportService {
           <!-- 1. رأس التقرير -->
           <div class="report-header">
             <div class="header-org">
-              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 65px; max-width: 180px; object-fit: contain; margin-bottom: 6px; display: block;" />` : ''}
+              <img src="${LOGO_BASE64}" alt="شعار المؤسسة" style="max-height: 75px; max-width: 175px; object-fit: contain; margin-bottom: 6px; display: block;" />
               <div class="org-name">شركة إدارة المشاريع والخدمات العامة</div>
               <div class="org-dept">إدارة الشؤون المالية والمصروفات</div>
               <div class="org-meta">س.ت: 1010000000 | الرقم الضريبي: 300000000000003</div>
@@ -711,7 +679,6 @@ export class ExportService {
   static async generateGenericPDF(options: GenericExportOptions, res: Response, filenamePrefix = 'report') {
     let browser = null;
     try {
-      const logoBase64 = getLogoBase64();
       const reportDate = options.reportDate || new Date().toLocaleDateString('ar-SA');
 
       const headersHtml = options.columns
@@ -784,7 +751,7 @@ export class ExportService {
         <body>
           <div class="header-container">
             <div style="display: flex; align-items: center; gap: 14px;">
-              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 60px; max-width: 160px; object-fit: contain;" />` : ''}
+              <img src="${LOGO_BASE64}" alt="شعار المؤسسة" style="max-height: 65px; max-width: 175px; object-fit: contain;" />
               <div class="header-title">
                 <h1>${options.title}</h1>
                 ${options.subtitle ? `<div style="font-size: 12px; color: #666; margin-top: 4px;">${options.subtitle}</div>` : ''}
