@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { BeneficiaryService } from '../services/beneficiary.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { BeneficiaryCreateSchema, BeneficiaryUpdateSchema } from '@expense-system/shared';
 
 export class BeneficiaryController {
   static async getAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -26,7 +27,9 @@ export class BeneficiaryController {
 
   static async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const item = await BeneficiaryService.create(req.body);
+      const validated = BeneficiaryCreateSchema.parse(req.body);
+      const userId = req.user?.id;
+      const item = await BeneficiaryService.create(validated, userId);
       return sendSuccess(res, item, 'تم إضافة المستفيد بنجاح', 201);
     } catch (error) {
       next(error);
@@ -36,7 +39,9 @@ export class BeneficiaryController {
   static async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const item = await BeneficiaryService.update(id, req.body);
+      const validated = BeneficiaryUpdateSchema.parse(req.body);
+      const userId = req.user?.id;
+      const item = await BeneficiaryService.update(id, validated, userId);
       return sendSuccess(res, item, 'تم تحديث بيانات المستفيد بنجاح');
     } catch (error) {
       next(error);

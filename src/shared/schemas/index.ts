@@ -37,6 +37,9 @@ export const BulkAssignProjectSchema = z.object({
   reason: z.string().min(3, 'سبب الربط مطلوب'),
 });
 
+// ─────────────────────────────────────────
+// Projects & Units Schemas
+// ─────────────────────────────────────────
 export const ProjectCreateSchema = z.object({
   projectCode: z.string().min(1, 'رقم المشروع إجباري وفريد'),
   projectName: z.string().min(2, 'اسم المشروع إجباري'),
@@ -53,6 +56,11 @@ export const ProjectCreateSchema = z.object({
 
 export const ProjectUpdateSchema = ProjectCreateSchema.partial();
 
+export const ProjectStatusUpdateSchema = z.object({
+  status: z.enum(['PLANNED', 'ACTIVE', 'SUSPENDED', 'COMPLETED', 'ARCHIVED', 'CANCELLED']),
+  isActive: z.boolean().optional(),
+});
+
 export const ProjectUnitCreateSchema = z.object({
   unitNumber: z.string().min(1, 'رقم الوحدة إجباري'),
   unitType: z.string().min(1, 'نوع الوحدة إجباري'),
@@ -61,6 +69,11 @@ export const ProjectUnitCreateSchema = z.object({
   status: z.enum(['AVAILABLE', 'SOLD', 'RENTED', 'UNDER_MAINTENANCE']).default('AVAILABLE'),
 });
 
+export const ProjectUnitUpdateSchema = ProjectUnitCreateSchema.partial();
+
+// ─────────────────────────────────────────
+// Users & Assignments Schemas
+// ─────────────────────────────────────────
 export const UserCreateSchema = z.object({
   employeeNumber: z.string().nullable().optional(),
   fullName: z.string().min(3, 'الاسم الكامل مطلوب'),
@@ -82,6 +95,68 @@ export const ResetPasswordSchema = z.object({
   newPassword: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
 });
 
+export const UserRolesUpdateSchema = z.object({
+  roleIds: z.array(z.number().int().positive(), {
+    required_error: 'يجب تحديد مصفوفة معرفات الأدوار',
+  }),
+});
+
+export const UserProjectsUpdateSchema = z.object({
+  projectIds: z.array(z.number().int().positive(), {
+    required_error: 'يجب تحديد مصفوفة معرفات المشاريع',
+  }),
+});
+
+export const UserCashboxesUpdateSchema = z.object({
+  cashboxIds: z.array(z.number().int().positive(), {
+    required_error: 'يجب تحديد مصفوفة معرفات الصناديق',
+  }),
+});
+
+// ─────────────────────────────────────────
+// Master Data Schemas (Beneficiaries, Categories, Cashboxes)
+// ─────────────────────────────────────────
+export const BeneficiaryCreateSchema = z.object({
+  name: z.string().trim().min(2, 'اسم المستفيد يجب أن يكون حرفين على الأقل'),
+  beneficiaryType: z.enum(['COMPANY', 'INSTITUTION', 'PERSON', 'EMPLOYEE', 'OTHER']).default('OTHER'),
+  commercialName: z.string().trim().nullable().optional(),
+  taxNumber: z.string().trim().nullable().optional(),
+  commercialRegistration: z.string().trim().nullable().optional(),
+  phone: z.string().trim().nullable().optional(),
+  email: z.string().trim().email('البريد الإلكتروني غير صالح').nullable().optional().or(z.literal('')),
+  iban: z.string().trim().nullable().optional(),
+  bankName: z.string().trim().nullable().optional(),
+  notes: z.string().trim().nullable().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export const BeneficiaryUpdateSchema = BeneficiaryCreateSchema.partial();
+
+export const ExpenseCategoryCreateSchema = z.object({
+  code: z.string().trim().min(1, 'كود التصنيف مطلوب'),
+  name: z.string().trim().min(2, 'اسم التصنيف مطلوب'),
+  parentId: z.number().int().positive().nullable().optional(),
+  accountingAccountCode: z.string().trim().nullable().optional(),
+  requiresProject: z.boolean().default(false),
+  requiresInvoice: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+
+export const ExpenseCategoryUpdateSchema = ExpenseCategoryCreateSchema.partial();
+
+export const CashboxCreateSchema = z.object({
+  code: z.string().trim().min(1, 'كود الصندوق مطلوب وفريد'),
+  name: z.string().trim().min(2, 'اسم الصندوق مطلوب'),
+  branchName: z.string().trim().nullable().optional(),
+  custodianUserId: z.number().int().positive().nullable().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export const CashboxUpdateSchema = CashboxCreateSchema.partial();
+
+// ─────────────────────────────────────────
+// Transactions Schemas
+// ─────────────────────────────────────────
 export const ExpenseTransactionCreateSchema = z.object({
   journalId: z.number().int().positive('رقم اليومية مطلوب'),
   voucherSource: z.nativeEnum(VoucherSource).default(VoucherSource.MANUAL),
@@ -134,6 +209,7 @@ export const TodayTransactionCreateSchema = z.object({
   paymentReference: z.string().trim().min(1).nullable().optional(),
   amount: z.number().positive('المبلغ يجب أن يكون أكبر من صفر'),
   description: z.string().trim().min(3, 'تفاصيل المصروف مطلوبة'),
+  invoiceStatus: z.enum(['PROVIDED', 'NOT_AVAILABLE', 'NOT_REQUIRED', 'PENDING']).optional(),
   invoiceNumber: z.string().trim().min(1).nullable().optional(),
   invoiceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   invoiceAmount: z.number().positive().nullable().optional(),
@@ -158,6 +234,7 @@ export const TodayTransactionUpdateSchema = z.object({
   paymentReference: z.string().trim().min(1).nullable().optional(),
   amount: z.number().positive('المبلغ يجب أن يكون أكبر من صفر').optional(),
   description: z.string().trim().min(3, 'تفاصيل المصروف مطلوبة').optional(),
+  invoiceStatus: z.enum(['PROVIDED', 'NOT_AVAILABLE', 'NOT_REQUIRED', 'PENDING']).optional(),
   invoiceNumber: z.string().trim().min(1).nullable().optional(),
   invoiceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   invoiceAmount: z.number().positive().nullable().optional(),

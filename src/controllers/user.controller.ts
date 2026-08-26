@@ -1,7 +1,14 @@
 import { Response, NextFunction } from 'express';
 import { UserService } from '../services/userService';
 import { sendSuccess } from '../utils/response';
-import { UserCreateSchema, UserUpdateSchema, ResetPasswordSchema } from '../shared';
+import {
+  UserCreateSchema,
+  UserUpdateSchema,
+  ResetPasswordSchema,
+  UserRolesUpdateSchema,
+  UserProjectsUpdateSchema,
+  UserCashboxesUpdateSchema,
+} from '@expense-system/shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class UserController {
@@ -86,9 +93,9 @@ export class UserController {
   static async updateRoles(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const { roleIds } = req.body;
+      const { roleIds } = UserRolesUpdateSchema.parse(req.body);
       const currentUserId = req.user!.id;
-      const result = await UserService.updateUserRoles(id, roleIds || [], currentUserId);
+      const result = await UserService.updateUserRoles(id, roleIds, currentUserId);
       return sendSuccess(res, result, 'تم تحديث أدوار المستخدم بنجاح');
     } catch (error) {
       next(error);
@@ -98,9 +105,9 @@ export class UserController {
   static async updateProjects(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const { projectIds } = req.body;
+      const { projectIds } = UserProjectsUpdateSchema.parse(req.body);
       const currentUserId = req.user!.id;
-      const result = await UserService.updateUserProjects(id, projectIds || [], currentUserId);
+      const result = await UserService.updateUserProjects(id, projectIds, currentUserId);
       return sendSuccess(res, result, 'تم ربط المشاريع بالمستخدم بنجاح');
     } catch (error) {
       next(error);
@@ -110,9 +117,9 @@ export class UserController {
   static async updateCashboxes(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const { cashboxIds } = req.body;
+      const { cashboxIds } = UserCashboxesUpdateSchema.parse(req.body);
       const currentUserId = req.user!.id;
-      const result = await UserService.updateUserCashboxes(id, cashboxIds || [], currentUserId);
+      const result = await UserService.updateUserCashboxes(id, cashboxIds, currentUserId);
       return sendSuccess(res, result, 'تم ربط الصناديق بالمستخدم بنجاح');
     } catch (error) {
       next(error);

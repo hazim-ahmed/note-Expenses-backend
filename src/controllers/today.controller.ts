@@ -4,7 +4,7 @@ import { TransactionService } from '../services/transaction.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { getRiyadhDateString } from '../utils/date';
-import { TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '../shared';
+import { TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '@expense-system/shared';
 
 export class TodayController {
   static async getTodayOverview(req: AuthenticatedRequest, res: Response, next: NextFunction) {

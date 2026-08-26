@@ -1,7 +1,13 @@
 import { Response, NextFunction } from 'express';
 import { ProjectService } from '../services/project.service';
 import { sendSuccess } from '../utils/response';
-import { ProjectCreateSchema, ProjectUpdateSchema, ProjectUnitCreateSchema } from '../shared';
+import {
+  ProjectCreateSchema,
+  ProjectUpdateSchema,
+  ProjectStatusUpdateSchema,
+  ProjectUnitCreateSchema,
+  ProjectUnitUpdateSchema,
+} from '@expense-system/shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class ProjectController {
@@ -54,9 +60,14 @@ export class ProjectController {
   static async updateStatus(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const { status, isActive } = req.body;
+      const validated = ProjectStatusUpdateSchema.parse(req.body);
       const userId = req.user!.id;
-      const result = await ProjectService.updateProjectStatus(id, status || 'ACTIVE', isActive !== false, userId);
+      const result = await ProjectService.updateProjectStatus(
+        id,
+        validated.status,
+        validated.isActive !== false,
+        userId
+      );
       return sendSuccess(res, result, 'تم تحديث حالة المشروع بنجاح');
     } catch (error) {
       next(error);
@@ -119,7 +130,8 @@ export class ProjectController {
     try {
       const projectId = parseInt(req.params.projectId, 10);
       const validated = ProjectUnitCreateSchema.parse(req.body);
-      const unit = await ProjectService.createUnit(projectId, validated);
+      const userId = req.user?.id;
+      const unit = await ProjectService.createUnit(projectId, validated, userId);
       return sendSuccess(res, unit, 'تم إضافة الوحدة العقارية بنجاح', 201);
     } catch (error) {
       next(error);
@@ -129,7 +141,9 @@ export class ProjectController {
   static async updateUnit(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const unit = await ProjectService.updateUnit(id, req.body);
+      const validated = ProjectUnitUpdateSchema.parse(req.body);
+      const userId = req.user?.id;
+      const unit = await ProjectService.updateUnit(id, validated, userId);
       return sendSuccess(res, unit, 'تم تحديث بيانات الوحدة بنجاح');
     } catch (error) {
       next(error);
@@ -139,7 +153,8 @@ export class ProjectController {
   static async deleteUnit(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
-      const result = await ProjectService.deleteUnit(id);
+      const userId = req.user?.id;
+      const result = await ProjectService.deleteUnit(id, userId);
       return sendSuccess(res, result, 'تم حذف الوحدة بنجاح');
     } catch (error) {
       next(error);

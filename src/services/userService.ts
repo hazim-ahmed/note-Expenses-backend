@@ -224,42 +224,25 @@ export class UserService {
     const user = await prisma.user.findUnique({ where: { id: BigInt(id) } });
     if (!user) throw new AppError('المستخدم غير موجود', 404, 'USER_NOT_FOUND');
 
-    if (data.username && data.username.trim() !== user.username) {
-      const trimmedUsername = data.username.trim();
-      const userExist = await prisma.user.findUnique({ where: { username: trimmedUsername } });
-      if (userExist && userExist.id !== BigInt(id)) {
-        throw new AppError(`اسم المستخدم (${trimmedUsername}) مستخدم بالفعل من قبل حساب آخر`, 400, 'USERNAME_TAKEN');
-      }
+    if (data.employeeNumber && data.employeeNumber !== user.employeeNumber) {
+      const empExist = await prisma.user.findUnique({ where: { employeeNumber: data.employeeNumber } });
+      if (empExist) throw new AppError('رقم الموظف مستخدم بالفعل', 400, 'EMPLOYEE_NUMBER_TAKEN');
     }
 
-    if (data.employeeNumber && data.employeeNumber.trim() !== user.employeeNumber) {
-      const trimmedEmp = data.employeeNumber.trim();
-      const empExist = await prisma.user.findUnique({ where: { employeeNumber: trimmedEmp } });
-      if (empExist && empExist.id !== BigInt(id)) {
-        throw new AppError(`رقم الموظف (${trimmedEmp}) مستخدم بالفعل`, 400, 'EMPLOYEE_NUMBER_TAKEN');
-      }
-    }
-
-    if (data.email && data.email.trim() !== user.email) {
-      const trimmedEmail = data.email.trim();
-      const emailExist = await prisma.user.findUnique({ where: { email: trimmedEmail } });
-      if (emailExist && emailExist.id !== BigInt(id)) {
-        throw new AppError(`البريد الإلكتروني (${trimmedEmail}) مستخدم بالفعل`, 400, 'EMAIL_TAKEN');
-      }
+    if (data.email && data.email !== user.email) {
+      const emailExist = await prisma.user.findUnique({ where: { email: data.email } });
+      if (emailExist) throw new AppError('البريد الإلكتروني مستخدم بالفعل', 400, 'EMAIL_TAKEN');
     }
 
     const updated = await prisma.$transaction(async (tx) => {
       const res = await tx.user.update({
         where: { id: BigInt(id) },
         data: {
-          username: data.username !== undefined ? data.username.trim() : user.username,
-          fullName: data.fullName !== undefined ? data.fullName.trim() : user.fullName,
-          employeeNumber: data.employeeNumber !== undefined ? (data.employeeNumber ? data.employeeNumber.trim() : null) : user.employeeNumber,
-          email: data.email !== undefined ? (data.email ? data.email.trim() : null) : user.email,
-          phone: data.phone !== undefined ? (data.phone ? data.phone.trim() : null) : user.phone,
+          fullName: data.fullName || user.fullName,
+          employeeNumber: data.employeeNumber !== undefined ? data.employeeNumber : user.employeeNumber,
+          email: data.email !== undefined ? data.email : user.email,
+          phone: data.phone !== undefined ? data.phone : user.phone,
           mustChangePassword: data.mustChangePassword !== undefined ? data.mustChangePassword : user.mustChangePassword,
-          status: data.status !== undefined ? data.status : user.status,
-          isActive: data.status !== undefined ? data.status !== 'INACTIVE' : user.isActive,
         },
       });
 
@@ -269,13 +252,7 @@ export class UserService {
           entityType: 'USER',
           entityId: BigInt(id),
           action: 'UPDATE_USER',
-          newValues: {
-            username: data.username !== undefined ? data.username.trim() : undefined,
-            fullName: data.fullName !== undefined ? data.fullName.trim() : undefined,
-            email: data.email !== undefined ? data.email : undefined,
-            phone: data.phone !== undefined ? data.phone : undefined,
-          },
-          reason: 'تعديل بيانات الملف الشخصي للمستخدم / اسم المستخدم',
+          reason: 'تعديل بيانات الملف الشخصي للمستخدم',
         },
       });
 
@@ -377,6 +354,26 @@ export class UserService {
 
   // Roles, Projects, & Cashboxes linkages
   static async updateUserRoles(userId: number, roleIds: number[], currentUserId: number) {
+    const adminRole = await prisma.role.findFirst({ where: { name: 'ADMIN' } });
+    if (adminRole) {
+      const userHasAdmin = await prisma.userRole.findFirst({
+        where: { userId: BigInt(userId), roleId: adminRole.id },
+      });
+      const newRolesIncludeAdmin = roleIds.some((rId) => BigInt(rId) === adminRole.id);
+
+      if (userHasAdmin && !newRolesIncludeAdmin) {
+        const activeAdminsCount = await prisma.userRole.count({
+          where: {
+            roleId: adminRole.id,
+            user: { isActive: true },
+          },
+        });
+        if (activeAdminsCount <= 1) {
+          throw new AppError('لا يمكنك إزالة صلاحية المدير (ADMIN) عن آخر مدير فعّال في النظام لحماية وصول الإدارة', 400, 'LAST_ADMIN_PROTECTION');
+        }
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.userRole.deleteMany({ where: { userId: BigInt(userId) } });
       await tx.userRole.createMany({

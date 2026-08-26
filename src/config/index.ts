@@ -5,9 +5,29 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 dotenv.config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (isProduction) {
+  const missingVars: string[] = [];
+  if (!process.env.JWT_ACCESS_SECRET || process.env.JWT_ACCESS_SECRET.includes('super-secret')) {
+    missingVars.push('JWT_ACCESS_SECRET (must be set to a secure unique secret in production)');
+  }
+  if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET.includes('super-secret')) {
+    missingVars.push('JWT_REFRESH_SECRET (must be set to a secure unique secret in production)');
+  }
+  if (!process.env.DATABASE_URL) {
+    missingVars.push('DATABASE_URL (must be explicitly defined in production)');
+  }
+  if (missingVars.length > 0) {
+    console.error('❌ Critical Production Security Error: The following environment variables are missing or insecure:');
+    missingVars.forEach((v) => console.error(`  - ${v}`));
+    throw new Error(`Insecure production configuration: ${missingVars.join(', ')}`);
+  }
+}
+
 export const config = {
   env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || process.env.API_PORT || '4000', 10),
+  port: parseInt(process.env.API_PORT || '4000', 10),
   databaseUrl: process.env.DATABASE_URL || 'mysql://root:rootpassword@localhost:3306/expense_db',
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'super-secret-access-token-key-2026',
@@ -21,3 +41,4 @@ export const config = {
     maxSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10), // 5MB
   },
 };
+

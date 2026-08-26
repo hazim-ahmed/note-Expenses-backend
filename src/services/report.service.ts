@@ -1,10 +1,12 @@
 import { prisma } from '../utils/prisma';
+import { getRiyadhDate, getRiyadhDateString } from '../utils/date';
 
 export class ReportService {
   static async getDailyExpensesReport(dateStr?: string) {
-    const date = dateStr ? new Date(dateStr) : new Date();
-    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+    const targetDateStr = dateStr || getRiyadhDateString();
+    const [year, month, day] = targetDateStr.split('-').map(Number);
+    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
     const transactions = await prisma.expenseTransaction.findMany({
       where: {
@@ -30,7 +32,7 @@ export class ReportService {
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
 
     return {
-      date: startOfDay.toISOString().split('T')[0],
+      date: targetDateStr,
       totalCount: transactions.length,
       totalAmount,
       approvedAmount,

@@ -51,6 +51,16 @@ export interface GenericExportOptions {
   };
 }
 
+export function escapeHtml(str: any): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export class ExportService {
   /**
    * توليد ملف إكسل بتنسيق RTL وإرساله مباشرة للمستخدم عبر الـ Stream
@@ -220,16 +230,16 @@ export class ExportService {
               (item, idx) => `
             <tr>
               <td class="col-center font-mono">${idx + 1}</td>
-              <td class="col-center">${item.date || '—'}</td>
-              <td class="col-right col-desc">${item.details || '—'}</td>
-              <td class="col-right">${item.beneficiary || '—'}</td>
-              <td class="col-right">${item.category || '—'}</td>
-              <td class="col-right">${item.project || '—'}</td>
-              <td class="col-center"><span class="badge-pay ${item.paymentMethod === 'بنك' ? 'badge-bank' : 'badge-cash'}">${item.paymentMethod || 'كاش'}</span></td>
-              <td class="col-center font-mono">${item.voucherNo || item.systemReference || '—'}</td>
-              <td class="col-center font-mono">${item.invoiceNumber || '—'}</td>
+              <td class="col-center">${escapeHtml(item.date) || '—'}</td>
+              <td class="col-right col-desc">${escapeHtml(item.details) || '—'}</td>
+              <td class="col-right">${escapeHtml(item.beneficiary) || '—'}</td>
+              <td class="col-right">${escapeHtml(item.category) || '—'}</td>
+              <td class="col-right">${escapeHtml(item.project) || '—'}</td>
+              <td class="col-center"><span class="badge-pay ${item.paymentMethod === 'بنك' ? 'badge-bank' : 'badge-cash'}">${escapeHtml(item.paymentMethod) || 'كاش'}</span></td>
+              <td class="col-center font-mono">${escapeHtml(item.voucherNo || item.systemReference) || '—'}</td>
+              <td class="col-center font-mono">${escapeHtml(item.invoiceNumber) || '—'}</td>
               <td class="col-amount">${(Number(item.amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</td>
-              <td class="col-right col-notes">${item.notes || '—'}</td>
+              <td class="col-right col-notes">${escapeHtml(item.notes) || '—'}</td>
             </tr>
           `
             )
@@ -712,7 +722,7 @@ export class ExportService {
       const reportDate = options.reportDate || new Date().toLocaleDateString('ar-SA');
 
       const headersHtml = options.columns
-        .map((col) => `<th style="text-align: center;">${col.header}</th>`)
+        .map((col) => `<th style="text-align: center;">${escapeHtml(col.header)}</th>`)
         .join('');
 
       const rowsHtml = options.rows
@@ -723,7 +733,7 @@ export class ExportService {
               const formattedVal =
                 col.isNumeric && typeof val === 'number'
                   ? val.toLocaleString('en-US', { minimumFractionDigits: 2 })
-                  : val;
+                  : escapeHtml(val);
               const align = col.align || 'center';
               return `<td style="text-align: ${align};">${formattedVal}</td>`;
             })
@@ -741,14 +751,14 @@ export class ExportService {
             const formattedVal =
               col.isNumeric && typeof val === 'number'
                 ? val.toLocaleString('en-US', { minimumFractionDigits: 2 })
-                : val;
+                : escapeHtml(val);
             return `<td style="text-align: center;">${formattedVal}</td>`;
           })
           .join('');
 
         totalRowHtml = `
           <tr class="total-row">
-            <td colspan="${options.totalRow.spanCount}" style="text-align: center;">${options.totalRow.label}</td>
+            <td colspan="${options.totalRow.spanCount}" style="text-align: center;">${escapeHtml(options.totalRow.label)}</td>
             ${remainingCells}
           </tr>
         `;

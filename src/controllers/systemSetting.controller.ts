@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { SystemSettingService } from '../services/systemSetting.service';
 import { sendSuccess } from '../utils/response';
-import { SystemSettingUpdateSchema, SYSTEM_SETTINGS_KEYS } from '../shared';
+import { SystemSettingUpdateSchema, SYSTEM_SETTINGS_KEYS } from '@expense-system/shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class SystemSettingController {

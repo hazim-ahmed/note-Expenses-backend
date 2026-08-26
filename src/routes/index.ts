@@ -12,12 +12,14 @@ import { CashboxController } from '../controllers/cashbox.controller';
 import { PaymentMethodController } from '../controllers/paymentMethod.controller';
 import { ReportController } from '../controllers/report.controller';
 import { AuditLogController } from '../controllers/auditLog.controller';
-import { authenticateJWT } from '../middleware/auth.middleware';
+import { AttachmentController } from '../controllers/attachment.controller';
+import { uploadMiddleware } from '../middleware/upload.middleware';
+import { authenticateJWT, requirePermission } from '../middleware/auth.middleware';
 
 const router = Router();
 
 // ─────────────────────────────────────────
-// 1. Auth Routes (Public)
+// 1. Auth Routes (Public & Semi-Public)
 // ─────────────────────────────────────────
 router.post('/auth/login', AuthController.login);
 router.post('/auth/refresh', AuthController.refresh);
@@ -27,119 +29,133 @@ router.get('/auth/me', authenticateJWT, AuthController.me);
 // ─────────────────────────────────────────
 // 2. Today's Auto Journal Engine
 // ─────────────────────────────────────────
-router.get('/today', authenticateJWT, TodayController.getTodayOverview);
-router.get('/today/transactions', authenticateJWT, TodayController.getTodayTransactions);
-router.post('/today/transactions', authenticateJWT, TodayController.createTransaction);
-router.patch('/today/transactions/:id', authenticateJWT, TodayController.updateTransaction);
-router.delete('/today/transactions/:id', authenticateJWT, TodayController.deleteTransaction);
+router.get('/today', authenticateJWT, requirePermission('transactions:read'), TodayController.getTodayOverview);
+router.get('/today/transactions', authenticateJWT, requirePermission('transactions:read'), TodayController.getTodayTransactions);
+router.post('/today/transactions', authenticateJWT, requirePermission('transactions:create'), TodayController.createTransaction);
+router.patch('/today/transactions/:id', authenticateJWT, requirePermission('transactions:update'), TodayController.updateTransaction);
+router.delete('/today/transactions/:id', authenticateJWT, requirePermission('transactions:cancel'), TodayController.deleteTransaction);
 
 // ─────────────────────────────────────────
 // 3. Journals (Daily Expense Books)
 // ─────────────────────────────────────────
-router.get('/journals', authenticateJWT, JournalController.getAll);
-router.get('/journals/:id', authenticateJWT, JournalController.getById);
-router.get('/journals/:id/export/excel', authenticateJWT, JournalController.exportExcel);
-router.get('/journals/:id/export/pdf', authenticateJWT, JournalController.exportPDF);
-router.post('/journals/:id/close', authenticateJWT, JournalController.close);
-router.post('/journals/:id/reopen', authenticateJWT, JournalController.reopen);
+router.get('/journals', authenticateJWT, requirePermission('transactions:read'), JournalController.getAll);
+router.get('/journals/:id', authenticateJWT, requirePermission('transactions:read'), JournalController.getById);
+router.get('/journals/:id/export/excel', authenticateJWT, requirePermission('reports:view'), JournalController.exportExcel);
+router.get('/journals/:id/export/pdf', authenticateJWT, requirePermission('reports:view'), JournalController.exportPDF);
+router.post('/journals/:id/close', authenticateJWT, requirePermission('journals:close'), JournalController.close);
+router.post('/journals/:id/approve', authenticateJWT, requirePermission('journals:approve'), JournalController.approve);
+router.post('/journals/:id/reopen', authenticateJWT, requirePermission('journals:reopen'), JournalController.reopen);
 
 // ─────────────────────────────────────────
-// 4. Expense Transactions (Bulk Operations)
+// 4. Expense Transactions & Approvals
 // ─────────────────────────────────────────
-router.patch('/expense-transactions/bulk-assign-project', authenticateJWT, TransactionController.bulkAssignProject);
+router.post('/expense-transactions', authenticateJWT, requirePermission('transactions:create'), TransactionController.create);
+router.patch('/expense-transactions/bulk-assign-project', authenticateJWT, requirePermission('transactions:assign_project'), TransactionController.bulkAssignProject);
+router.patch('/expense-transactions/:id', authenticateJWT, requirePermission('transactions:update'), TransactionController.update);
+router.delete('/expense-transactions/:id', authenticateJWT, requirePermission('transactions:cancel'), TransactionController.delete);
+router.post('/expense-transactions/:id/approve', authenticateJWT, requirePermission('transactions:approve'), TransactionController.approve);
+router.post('/expense-transactions/:id/reject', authenticateJWT, requirePermission('transactions:reject'), TransactionController.reject);
+
+// Attachments
+router.post('/expense-transactions/:id/attachments', authenticateJWT, requirePermission('transactions:update'), uploadMiddleware.single('file'), AttachmentController.upload);
+router.get('/expense-transactions/:id/attachments', authenticateJWT, requirePermission('transactions:read'), AttachmentController.getByTransaction);
+router.get('/expense-transactions/attachments/:attachmentId/download', authenticateJWT, requirePermission('transactions:read'), AttachmentController.download);
+router.delete('/expense-transactions/attachments/:attachmentId', authenticateJWT, requirePermission('transactions:update'), AttachmentController.delete);
 
 // ─────────────────────────────────────────
 // 5. Projects & Units
 // ─────────────────────────────────────────
-router.get('/projects', authenticateJWT, ProjectController.getAll);
-router.post('/projects', authenticateJWT, ProjectController.create);
-router.get('/projects/:id', authenticateJWT, ProjectController.getById);
-router.patch('/projects/:id', authenticateJWT, ProjectController.update);
-router.patch('/projects/:id/status', authenticateJWT, ProjectController.updateStatus);
-router.post('/projects/:id/archive', authenticateJWT, ProjectController.archive);
-router.get('/projects/:id/summary', authenticateJWT, ProjectController.getSummary);
-router.get('/projects/:id/transactions', authenticateJWT, ProjectController.getTransactions);
+router.get('/projects', authenticateJWT, requirePermission('projects.view'), ProjectController.getAll);
+router.post('/projects', authenticateJWT, requirePermission('projects.create'), ProjectController.create);
+router.get('/projects/:id', authenticateJWT, requirePermission('projects.view'), ProjectController.getById);
+router.patch('/projects/:id', authenticateJWT, requirePermission('projects.update'), ProjectController.update);
+router.patch('/projects/:id/status', authenticateJWT, requirePermission('projects.update'), ProjectController.updateStatus);
+router.post('/projects/:id/archive', authenticateJWT, requirePermission('projects.archive'), ProjectController.archive);
+router.get('/projects/:id/summary', authenticateJWT, requirePermission('projects.view_expenses'), ProjectController.getSummary);
+router.get('/projects/:id/transactions', authenticateJWT, requirePermission('projects.view_expenses'), ProjectController.getTransactions);
+
 // Project Units
-router.get('/projects/:projectId/units', authenticateJWT, ProjectController.getUnits);
-router.post('/projects/:projectId/units', authenticateJWT, ProjectController.createUnit);
-router.patch('/projects/:projectId/units/:id', authenticateJWT, ProjectController.updateUnit);
-router.delete('/projects/:projectId/units/:id', authenticateJWT, ProjectController.deleteUnit);
+router.get('/projects/:projectId/units', authenticateJWT, requirePermission('projects.view'), ProjectController.getUnits);
+router.post('/projects/:projectId/units', authenticateJWT, requirePermission('projects.create'), ProjectController.createUnit);
+router.patch('/projects/:projectId/units/:id', authenticateJWT, requirePermission('projects.update'), ProjectController.updateUnit);
+router.delete('/projects/:projectId/units/:id', authenticateJWT, requirePermission('projects.update'), ProjectController.deleteUnit);
 
 // ─────────────────────────────────────────
 // 6. Users & RBAC
 // ─────────────────────────────────────────
-router.get('/users', authenticateJWT, UserController.getAll);
-router.post('/users', authenticateJWT, UserController.create);
-router.get('/users/:id', authenticateJWT, UserController.getById);
-router.patch('/users/:id', authenticateJWT, UserController.update);
-router.patch('/users/:id/status', authenticateJWT, UserController.toggleStatus);
-router.post('/users/:id/reset-password', authenticateJWT, UserController.resetPassword);
-router.patch('/users/:id/roles', authenticateJWT, UserController.updateRoles);
-router.patch('/users/:id/projects', authenticateJWT, UserController.updateProjects);
-router.patch('/users/:id/cashboxes', authenticateJWT, UserController.updateCashboxes);
+router.get('/users', authenticateJWT, requirePermission('users.view'), UserController.getAll);
+router.post('/users', authenticateJWT, requirePermission('users.create'), UserController.create);
+router.get('/users/:id', authenticateJWT, requirePermission('users.view'), UserController.getById);
+router.patch('/users/:id', authenticateJWT, requirePermission('users.update'), UserController.update);
+router.patch('/users/:id/status', authenticateJWT, requirePermission('users.activate'), UserController.toggleStatus);
+router.post('/users/:id/reset-password', authenticateJWT, requirePermission('users.reset_password'), UserController.resetPassword);
+router.patch('/users/:id/roles', authenticateJWT, requirePermission('users.assign_roles'), UserController.updateRoles);
+router.patch('/users/:id/projects', authenticateJWT, requirePermission('users.assign_roles'), UserController.updateProjects);
+router.patch('/users/:id/cashboxes', authenticateJWT, requirePermission('users.assign_roles'), UserController.updateCashboxes);
 
 // ─────────────────────────────────────────
 // 7. Beneficiaries
 // ─────────────────────────────────────────
-router.get('/beneficiaries', authenticateJWT, BeneficiaryController.getAll);
-router.post('/beneficiaries', authenticateJWT, BeneficiaryController.create);
-router.get('/beneficiaries/:id', authenticateJWT, BeneficiaryController.getById);
-router.patch('/beneficiaries/:id', authenticateJWT, BeneficiaryController.update);
+router.get('/beneficiaries', authenticateJWT, requirePermission('transactions:read'), BeneficiaryController.getAll);
+router.post('/beneficiaries', authenticateJWT, requirePermission('transactions:create'), BeneficiaryController.create);
+router.get('/beneficiaries/:id', authenticateJWT, requirePermission('transactions:read'), BeneficiaryController.getById);
+router.patch('/beneficiaries/:id', authenticateJWT, requirePermission('transactions:update'), BeneficiaryController.update);
 
 // ─────────────────────────────────────────
 // 8. Expense Categories
 // ─────────────────────────────────────────
-router.get('/expense-categories', authenticateJWT, CategoryController.getAll);
-router.post('/expense-categories', authenticateJWT, CategoryController.create);
+router.get('/expense-categories', authenticateJWT, requirePermission('transactions:read'), CategoryController.getAll);
+router.post('/expense-categories', authenticateJWT, requirePermission('transactions:create'), CategoryController.create);
+router.patch('/expense-categories/:id', authenticateJWT, requirePermission('transactions:update'), CategoryController.update);
 
 // ─────────────────────────────────────────
 // 9. Cashboxes
 // ─────────────────────────────────────────
-router.get('/cashboxes', authenticateJWT, CashboxController.getAll);
-router.post('/cashboxes', authenticateJWT, CashboxController.create);
-router.patch('/cashboxes/:id', authenticateJWT, CashboxController.update);
+router.get('/cashboxes', authenticateJWT, requirePermission('transactions:read'), CashboxController.getAll);
+router.post('/cashboxes', authenticateJWT, requirePermission('system_settings:update'), CashboxController.create);
+router.patch('/cashboxes/:id', authenticateJWT, requirePermission('system_settings:update'), CashboxController.update);
 
 // ─────────────────────────────────────────
 // 10. Payment Methods
 // ─────────────────────────────────────────
-router.get('/payment-methods', authenticateJWT, PaymentMethodController.getAll);
+router.get('/payment-methods', authenticateJWT, requirePermission('transactions:read'), PaymentMethodController.getAll);
 
 // ─────────────────────────────────────────
 // 11. System Settings
 // ─────────────────────────────────────────
-router.get('/system-settings', authenticateJWT, SystemSettingController.getAll);
-router.patch('/system-settings/expenses.project_requirement_mode', authenticateJWT, SystemSettingController.updateProjectRequirementMode);
+router.get('/system-settings', authenticateJWT, requirePermission('system_settings:read'), SystemSettingController.getAll);
+router.patch('/system-settings/expenses.project_requirement_mode', authenticateJWT, requirePermission('system_settings:update'), SystemSettingController.updateProjectRequirementMode);
 
 // ─────────────────────────────────────────
 // 12. Reports (7 Reports)
 // ─────────────────────────────────────────
-router.get('/reports/daily-expenses', authenticateJWT, ReportController.getDailyExpenses);
-router.get('/reports/daily-expenses/export/excel', authenticateJWT, ReportController.exportDailyExpensesExcel);
-router.get('/reports/daily-expenses/export/pdf', authenticateJWT, ReportController.exportDailyExpensesPDF);
+router.get('/reports/daily-expenses', authenticateJWT, requirePermission('reports:view'), ReportController.getDailyExpenses);
+router.get('/reports/daily-expenses/export/excel', authenticateJWT, requirePermission('reports:view'), ReportController.exportDailyExpensesExcel);
+router.get('/reports/daily-expenses/export/pdf', authenticateJWT, requirePermission('reports:view'), ReportController.exportDailyExpensesPDF);
 
-router.get('/reports/by-project', authenticateJWT, ReportController.getExpensesByProject);
-router.get('/reports/by-project/export/excel', authenticateJWT, ReportController.exportExpensesByProjectExcel);
-router.get('/reports/by-project/export/pdf', authenticateJWT, ReportController.exportExpensesByProjectPDF);
+router.get('/reports/by-project', authenticateJWT, requirePermission('reports:view'), ReportController.getExpensesByProject);
+router.get('/reports/by-project/export/excel', authenticateJWT, requirePermission('reports:view'), ReportController.exportExpensesByProjectExcel);
+router.get('/reports/by-project/export/pdf', authenticateJWT, requirePermission('reports:view'), ReportController.exportExpensesByProjectPDF);
 
-router.get('/reports/by-beneficiary', authenticateJWT, ReportController.getExpensesByBeneficiary);
-router.get('/reports/by-category', authenticateJWT, ReportController.getExpensesByCategory);
+router.get('/reports/by-beneficiary', authenticateJWT, requirePermission('reports:view'), ReportController.getExpensesByBeneficiary);
+router.get('/reports/by-category', authenticateJWT, requirePermission('reports:view'), ReportController.getExpensesByCategory);
 
-router.get('/reports/unassigned-project-transactions', authenticateJWT, ReportController.getUnassignedProjectTransactions);
-router.get('/reports/unassigned-project-transactions/export/excel', authenticateJWT, ReportController.exportUnassignedTransactionsExcel);
-router.get('/reports/unassigned-project-transactions/export/pdf', authenticateJWT, ReportController.exportUnassignedTransactionsPDF);
+router.get('/reports/unassigned-project-transactions', authenticateJWT, requirePermission('reports:view'), ReportController.getUnassignedProjectTransactions);
+router.get('/reports/unassigned-project-transactions/export/excel', authenticateJWT, requirePermission('reports:view'), ReportController.exportUnassignedTransactionsExcel);
+router.get('/reports/unassigned-project-transactions/export/pdf', authenticateJWT, requirePermission('reports:view'), ReportController.exportUnassignedTransactionsPDF);
 
-router.get('/reports/pending-invoices', authenticateJWT, ReportController.getPendingInvoices);
-router.get('/reports/pending-invoices/export/excel', authenticateJWT, ReportController.exportPendingInvoicesExcel);
-router.get('/reports/pending-invoices/export/pdf', authenticateJWT, ReportController.exportPendingInvoicesPDF);
+router.get('/reports/pending-invoices', authenticateJWT, requirePermission('reports:view'), ReportController.getPendingInvoices);
+router.get('/reports/pending-invoices/export/excel', authenticateJWT, requirePermission('reports:view'), ReportController.exportPendingInvoicesExcel);
+router.get('/reports/pending-invoices/export/pdf', authenticateJWT, requirePermission('reports:view'), ReportController.exportPendingInvoicesPDF);
 
-router.get('/reports/manual-vouchers', authenticateJWT, ReportController.getManualVouchers);
-router.get('/reports/manual-vouchers/export/excel', authenticateJWT, ReportController.exportManualVouchersExcel);
-router.get('/reports/manual-vouchers/export/pdf', authenticateJWT, ReportController.exportManualVouchersPDF);
+router.get('/reports/manual-vouchers', authenticateJWT, requirePermission('reports:view'), ReportController.getManualVouchers);
+router.get('/reports/manual-vouchers/export/excel', authenticateJWT, requirePermission('reports:view'), ReportController.exportManualVouchersExcel);
+router.get('/reports/manual-vouchers/export/pdf', authenticateJWT, requirePermission('reports:view'), ReportController.exportManualVouchersPDF);
 
 // ─────────────────────────────────────────
 // 13. Audit Logs
 // ─────────────────────────────────────────
-router.get('/audit-logs', authenticateJWT, AuditLogController.getAll);
+router.get('/audit-logs', authenticateJWT, requirePermission('users.view_activity'), AuditLogController.getAll);
 
 export default router;
 

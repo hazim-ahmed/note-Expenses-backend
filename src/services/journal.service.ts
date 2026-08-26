@@ -48,7 +48,6 @@ export class JournalService {
     const todayDate = getRiyadhDate();
     const todayStr = getRiyadhDateString();
     const cleanDateCode = todayStr.replace(/-/g, '');
-    const journalNumber = `JRN-${cleanDateCode}`;
 
     // Get main cashbox
     let cashbox = await prisma.cashbox.findFirst({ where: { isActive: true } });
@@ -57,6 +56,8 @@ export class JournalService {
         data: { code: 'CASH-001', name: 'الصندوق الرئيسي', isActive: true },
       });
     }
+
+    const journalNumber = `JRN-${cleanDateCode}-${cashbox.code}`;
 
     // Find existing journal for today date & cashbox
     let journal = await prisma.expenseJournal.findFirst({
@@ -241,5 +242,49 @@ export class JournalService {
     });
 
     return { id: Number(updated.id), status: updated.status };
+  }
+
+  static async approveJournal(id: number, userId: number) {
+    const journal = await prisma.expenseJournal.findUnique({ where: { id: BigInt(id) } });
+    if (!journal) throw new AppError('اليومية غير موجودة', 404, 'NOT_FOUND');
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const res = await tx.expenseJournal.update({
+        where: { id: BigInt(id) },
+        data: {
+          status: 'APPROVED',
+          approvedBy: BigInt(userId),
+          approvedAt: new Date(),
+        },
+      });
+
+      // Auto-approve all unapproved transactions inside this journal
+      await tx.expenseTransaction.updateMany({
+        where: {
+          journalId: BigInt(id),
+          status: { in: ['DRAFT', 'PENDING_REVIEW'] },
+          deletedAt: null,
+        },
+        data: {
+          status: 'APPROVED',
+          approvedBy: BigInt(userId),
+          approvedAt: new Date(),
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: BigInt(userId),
+          entityType: 'EXPENSE_JOURNAL',
+          entityId: BigInt(id),
+          action: 'APPROVE_JOURNAL',
+          reason: 'اعتماد اليومية بالكامل وسنداتها بواسطة المحاسب/المسؤول',
+        },
+      });
+
+      return res;
+    });
+
+    return { id: Number(updated.id), status: updated.status, approvedAt: updated.approvedAt };
   }
 }

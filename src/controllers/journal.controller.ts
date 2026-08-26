@@ -47,6 +47,17 @@ export class JournalController {
     }
   }
 
+  static async approve(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const userId = req.user!.id;
+      const journal = await JournalService.approveJournal(id, userId);
+      return sendSuccess(res, journal, 'تم اعتماد اليومية وسنداتها بنجاح');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async reopen(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);

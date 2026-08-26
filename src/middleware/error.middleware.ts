@@ -28,9 +28,9 @@ export function errorHandler(
     return sendError(res, err.message, err.errorCode, err.statusCode, err.errors);
   }
 
-  if (err instanceof ZodError) {
-    const formattedErrors = err.errors.map((e) => ({
-      field: e.path.join('.'),
+  if (err instanceof ZodError || err?.name === 'ZodError') {
+    const formattedErrors = (err.errors || []).map((e: any) => ({
+      field: Array.isArray(e.path) ? e.path.join('.') : (e.path || ''),
       message: e.message,
     }));
     return sendError(res, 'خطأ في التحقق من البيانات المدخلة', 'VALIDATION_ERROR', 400, formattedErrors);

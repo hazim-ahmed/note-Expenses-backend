@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { TransactionService } from '../services/transaction.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { BulkAssignProjectSchema, TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '../shared';
+import { BulkAssignProjectSchema, TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '@expense-system/shared';
 
 export class TransactionController {
   static async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -53,6 +53,32 @@ export class TransactionController {
         userId
       );
       return sendSuccess(res, result, `تم ربط ${result.assigned} سند بمشروع (${result.projectName}) بنجاح`);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async approve(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const userId = req.user!.id;
+      const userRole = req.user!.roles?.[0] || 'EXPENSE_USER';
+      const { comments } = req.body || {};
+      const result = await TransactionService.approveTransaction(id, userId, userRole, comments);
+      return sendSuccess(res, result, 'تم اعتماد سند الصرف بنجاح');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async reject(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const userId = req.user!.id;
+      const userRole = req.user!.roles?.[0] || 'EXPENSE_USER';
+      const { reason } = req.body || {};
+      const result = await TransactionService.rejectTransaction(id, userId, userRole, reason);
+      return sendSuccess(res, result, 'تم رفض سند الصرف');
     } catch (error) {
       next(error);
     }

@@ -1,5 +1,5 @@
 import { prisma } from '../utils/prisma';
-import { SYSTEM_SETTINGS_KEYS, ProjectRequirementMode } from '../shared';
+import { SYSTEM_SETTINGS_KEYS, ProjectRequirementMode } from '@expense-system/shared';
 import { AppError } from '../middleware/error.middleware';
 
 export class SystemSettingService {

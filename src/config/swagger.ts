@@ -324,5 +324,160 @@ export const swaggerDocument = {
         },
       },
     },
+    '/expense-transactions/{id}/approve': {
+      post: {
+        summary: 'اعتماد سند صرف',
+        tags: ['Approvals'],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  comments: { type: 'string', example: 'تمت المراجعة والاعتماد' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'تم اعتماد سند الصرف بنجاح' },
+          400: { description: 'السند معتمد بالفعل أو خطأ في الحالة' },
+        },
+      },
+    },
+    '/expense-transactions/{id}/reject': {
+      post: {
+        summary: 'رفض سند صرف',
+        tags: ['Approvals'],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['reason'],
+                properties: {
+                  reason: { type: 'string', example: 'عدم وجود فاتورة ضريبية مطابقة' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'تم رفض سند الصرف' },
+          400: { description: 'بيانات غير مكتملة أو اليومية مغلقة' },
+        },
+      },
+    },
+    '/journals/{id}/approve': {
+      post: {
+        summary: 'اعتماد اليومية بالكامل',
+        tags: ['Approvals'],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: { description: 'تم اعتماد اليومية وسنداتها بنجاح' },
+        },
+      },
+    },
+    '/expense-transactions/{id}/attachments': {
+      get: {
+        summary: 'قائمة مرفقات سند الصرف',
+        tags: ['Attachments'],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: { description: 'قائمة مرفقات السند' },
+        },
+      },
+      post: {
+        summary: 'رفع مرفق لسند الصرف',
+        tags: ['Attachments'],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                required: ['file'],
+                properties: {
+                  file: { type: 'string', format: 'binary' },
+                  attachmentType: { type: 'string', example: 'INVOICE' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'تم رفع المرفق بنجاح' },
+        },
+      },
+    },
+    '/expense-transactions/attachments/{attachmentId}/download': {
+      get: {
+        summary: 'تحميل ملف مرفق محمي',
+        tags: ['Attachments'],
+        parameters: [
+          { name: 'attachmentId', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: { description: 'ملف المرفق' },
+          404: { description: 'المرفق أو الملف غير موجود' },
+        },
+      },
+    },
+    '/expense-transactions/attachments/{attachmentId}': {
+      delete: {
+        summary: 'حذف مرفق',
+        tags: ['Attachments'],
+        parameters: [
+          { name: 'attachmentId', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: { description: 'تم حذف المرفق بنجاح' },
+          403: { description: 'اليومية مغلقة' },
+        },
+      },
+    },
+    '/reports/daily-expenses': {
+      get: {
+        summary: 'تقرير المصروفات اليومية',
+        tags: ['Reports'],
+        parameters: [
+          { name: 'date', in: 'query', required: false, schema: { type: 'string', example: '2026-08-26' } },
+        ],
+        responses: {
+          200: { description: 'بيانات التقرير اليومي والإجماليات' },
+        },
+      },
+    },
+    '/audit-logs': {
+      get: {
+        summary: 'سجل التدقيق والتعديلات',
+        tags: ['Audit Logs'],
+        parameters: [
+          { name: 'entityType', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'action', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'page', in: 'query', required: false, schema: { type: 'integer' } },
+          { name: 'limit', in: 'query', required: false, schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: { description: 'سجلات التدقيق مع بيانات المستخدمين' },
+        },
+      },
+    },
   },
 };

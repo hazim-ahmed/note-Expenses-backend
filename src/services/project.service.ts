@@ -270,7 +270,7 @@ export class ProjectService {
     return units;
   }
 
-  static async createUnit(projectId: number, data: any) {
+  static async createUnit(projectId: number, data: any, userId?: number) {
     const existing = await prisma.projectUnit.findUnique({
       where: {
         projectId_unitNumber: {
@@ -283,28 +283,71 @@ export class ProjectService {
       throw new AppError(`الوحدة رقم (${data.unitNumber}) موجودة بالفعل في هذا المشروع`, 400, 'UNIT_EXISTS');
     }
 
-    const unit = await prisma.projectUnit.create({
-      data: {
-        projectId: BigInt(projectId),
-        unitNumber: data.unitNumber,
-        unitType: data.unitType,
-        buildingNumber: data.buildingNumber || null,
-        floorNumber: data.floorNumber || null,
-        status: data.status || 'AVAILABLE',
-      },
+    const unit = await prisma.$transaction(async (tx) => {
+      const created = await tx.projectUnit.create({
+        data: {
+          projectId: BigInt(projectId),
+          unitNumber: data.unitNumber,
+          unitType: data.unitType,
+          buildingNumber: data.buildingNumber || null,
+          floorNumber: data.floorNumber || null,
+          status: data.status || 'AVAILABLE',
+        },
+      });
+
+      if (userId) {
+        await tx.auditLog.create({
+          data: {
+            userId: BigInt(userId),
+            entityType: 'PROJECT_UNIT',
+            entityId: created.id,
+            action: 'CREATE_PROJECT_UNIT',
+            newValues: { projectId, unitNumber: created.unitNumber, unitType: created.unitType },
+            reason: `إضافة وحدة عقارية (${created.unitNumber}) للمشروع`,
+          },
+        });
+      }
+
+      return created;
     });
+
     return { ...unit, id: Number(unit.id) };
   }
 
-  static async updateUnit(id: number, data: any) {
-    const unit = await prisma.projectUnit.update({
-      where: { id: BigInt(id) },
-      data,
+  static async updateUnit(id: number, data: any, userId?: number) {
+    const existing = await prisma.projectUnit.findUnique({ where: { id: BigInt(id) } });
+    if (!existing) throw new AppError('الوحدة العقارية غير موجودة', 404, 'UNIT_NOT_FOUND');
+
+    const unit = await prisma.$transaction(async (tx) => {
+      const updated = await tx.projectUnit.update({
+        where: { id: BigInt(id) },
+        data,
+      });
+
+      if (userId) {
+        await tx.auditLog.create({
+          data: {
+            userId: BigInt(userId),
+            entityType: 'PROJECT_UNIT',
+            entityId: BigInt(id),
+            action: 'UPDATE_PROJECT_UNIT',
+            oldValues: { unitNumber: existing.unitNumber, status: existing.status },
+            newValues: { unitNumber: updated.unitNumber, status: updated.status },
+            reason: `تحديث بيانات الوحدة العقارية (${updated.unitNumber})`,
+          },
+        });
+      }
+
+      return updated;
     });
+
     return { ...unit, id: Number(unit.id) };
   }
 
-  static async deleteUnit(id: number) {
+  static async deleteUnit(id: number, userId?: number) {
+    const unit = await prisma.projectUnit.findUnique({ where: { id: BigInt(id) } });
+    if (!unit) throw new AppError('الوحدة العقارية غير موجودة', 404, 'UNIT_NOT_FOUND');
+
     const txCount = await prisma.expenseTransaction.count({
       where: { projectUnitId: BigInt(id), deletedAt: null },
     });
@@ -312,7 +355,24 @@ export class ProjectService {
       throw new AppError(`لا يمكن حذف الوحدة لأنها مرتبطة بـ ${txCount} عمليات سداد ومصروفات`, 400, 'UNIT_HAS_TRANSACTIONS');
     }
 
-    const deleted = await prisma.projectUnit.delete({ where: { id: BigInt(id) } });
+    const deleted = await prisma.$transaction(async (tx) => {
+      const del = await tx.projectUnit.delete({ where: { id: BigInt(id) } });
+
+      if (userId) {
+        await tx.auditLog.create({
+          data: {
+            userId: BigInt(userId),
+            entityType: 'PROJECT_UNIT',
+            entityId: BigInt(id),
+            action: 'DELETE_PROJECT_UNIT',
+            reason: `حذف الوحدة العقارية (${unit.unitNumber}) من المشروع`,
+          },
+        });
+      }
+
+      return del;
+    });
+
     return { id: Number(deleted.id) };
   }
 }
