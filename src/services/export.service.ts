@@ -1,6 +1,31 @@
 import ExcelJS from 'exceljs';
 import puppeteer from 'puppeteer';
 import { Response } from 'express';
+import fs from 'fs';
+import path from 'path';
+
+function getLogoBase64(): string {
+  try {
+    const candidatePaths = [
+      path.join(process.cwd(), 'assets', 'logo.png'),
+      path.join(process.cwd(), 'public', 'logo.png'),
+      path.join(process.cwd(), 'logo.png'),
+      path.join(__dirname, '..', '..', 'assets', 'logo.png'),
+      path.join(__dirname, '..', '..', '..', 'logo.png'),
+      path.join(__dirname, '..', '..', '..', '..', 'logo.png'),
+      'C:\\Users\\Silver_Bullet\\Desktop\\exoen_man\\logo.png',
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        const fileBuffer = fs.readFileSync(p);
+        return `data:image/png;base64,${fileBuffer.toString('base64')}`;
+      }
+    }
+  } catch (err) {
+    console.error('Error reading logo file for PDF export:', err);
+  }
+  return '';
+}
 
 export interface ExpenseExportRow {
   index?: number;
@@ -206,6 +231,7 @@ export class ExportService {
   static async generatePDF(options: ExportReportOptions, res: Response, filenamePrefix = 'expenses') {
     let browser = null;
     try {
+      const logoBase64 = getLogoBase64();
       const reportDate = options.reportDate || new Date().toLocaleDateString('ar-SA');
       const totalAmount =
         options.totalAmount !== undefined
@@ -452,6 +478,7 @@ export class ExportService {
           <!-- 1. رأس التقرير -->
           <div class="report-header">
             <div class="header-org">
+              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 52px; max-width: 140px; object-fit: contain; margin-bottom: 6px; display: block;" />` : ''}
               <div class="org-name">شركة إدارة المشاريع والخدمات العامة</div>
               <div class="org-dept">إدارة الشؤون المالية والمصروفات</div>
               <div class="org-meta">س.ت: 1010000000 | الرقم الضريبي: 300000000000003</div>
@@ -677,6 +704,7 @@ export class ExportService {
   static async generateGenericPDF(options: GenericExportOptions, res: Response, filenamePrefix = 'report') {
     let browser = null;
     try {
+      const logoBase64 = getLogoBase64();
       const reportDate = options.reportDate || new Date().toLocaleDateString('ar-SA');
 
       const headersHtml = options.columns
@@ -748,9 +776,12 @@ export class ExportService {
         </head>
         <body>
           <div class="header-container">
-            <div class="header-title">
-              <h1>${options.title}</h1>
-              ${options.subtitle ? `<div style="font-size: 12px; color: #666; margin-top: 4px;">${options.subtitle}</div>` : ''}
+            <div style="display: flex; align-items: center; gap: 14px;">
+              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 48px; max-width: 130px; object-fit: contain;" />` : ''}
+              <div class="header-title">
+                <h1>${options.title}</h1>
+                ${options.subtitle ? `<div style="font-size: 12px; color: #666; margin-top: 4px;">${options.subtitle}</div>` : ''}
+              </div>
             </div>
             <div class="header-meta">
               <div><strong>تاريخ التقرير:</strong> ${reportDate}</div>
