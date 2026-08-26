@@ -5,7 +5,8 @@
   "main": "src/app.ts",
   "scripts": {
     "dev": "tsx watch src/app.ts",
-    "build": "tsc",
+    "build": "npx puppeteer browsers install chrome && tsc",
+    "postinstall": "prisma generate && npx puppeteer browsers install chrome",
     "start": "node dist/app.js",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
