@@ -214,7 +214,7 @@ export class ExportService {
           : options.rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
       const tableRowsHtml = options.rows.length === 0
-        ? `<tr><td colspan="9" style="text-align: center; padding: 30px; font-size: 11pt; color: #475569; font-weight: bold;">لا توجد مصروفات خلال الفترة المحددة</td></tr>`
+        ? `<tr><td colspan="11" style="text-align: center; padding: 30px; font-size: 11pt; color: #475569; font-weight: bold;">لا توجد مصروفات خلال الفترة المحددة</td></tr>`
         : options.rows
             .map(
               (item, idx) => `
@@ -222,8 +222,10 @@ export class ExportService {
               <td class="col-center font-mono">${idx + 1}</td>
               <td class="col-center">${item.date || '—'}</td>
               <td class="col-right col-desc">${item.details || '—'}</td>
+              <td class="col-right">${item.beneficiary || '—'}</td>
               <td class="col-right">${item.category || '—'}</td>
               <td class="col-right">${item.project || '—'}</td>
+              <td class="col-center"><span class="badge-pay ${item.paymentMethod === 'بنك' ? 'badge-bank' : 'badge-cash'}">${item.paymentMethod || 'كاش'}</span></td>
               <td class="col-center font-mono">${item.voucherNo || item.systemReference || '—'}</td>
               <td class="col-center font-mono">${item.invoiceNumber || '—'}</td>
               <td class="col-amount">${(Number(item.amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</td>
@@ -387,6 +389,25 @@ export class ExportService {
               white-space: nowrap;
             }
 
+            .badge-pay {
+              display: inline-block;
+              padding: 2px 6px;
+              font-size: 8pt;
+              font-weight: 800;
+              border-radius: 4px;
+              white-space: nowrap;
+            }
+            .badge-cash {
+              background-color: #ECFDF5;
+              color: #065F46;
+              border: 1px solid #A7F3D0;
+            }
+            .badge-bank {
+              background-color: #EFF6FF;
+              color: #1E40AF;
+              border: 1px solid #BFDBFE;
+            }
+
             /* صف الإجمالي الكلي */
             .total-row {
               background-color: #F3F4F6 !important;
@@ -395,9 +416,9 @@ export class ExportService {
               border-top: 2px solid #000000 !important;
               border-bottom: 4px double #000000 !important;
               font-weight: 900 !important;
-              font-size: 11pt !important;
+              font-size: 10.5pt !important;
               color: #000000 !important;
-              padding: 8px 8px;
+              padding: 7px 8px;
             }
 
             /* قسم التواقيع والاعتمادات الرسمية أسفل التقرير */
@@ -485,23 +506,24 @@ export class ExportService {
           <table class="expense-table">
             <thead>
               <tr>
-                <th style="width: 4%;">#</th>
-                <th style="width: 9%;">تاريخ المصروف</th>
-                <th style="width: 22%;">بيان المصروف</th>
+                <th style="width: 3.5%;">#</th>
+                <th style="width: 8.5%;">تاريخ المصروف</th>
+                <th style="width: 19%;">بيان المصروف</th>
                 <th style="width: 12%;">المستفيد</th>
-                <th style="width: 10%;">التصنيف</th>
-                <th style="width: 12%;">مركز التكلفة (المشروع)</th>
-                <th style="width: 9%;">رقم السند</th>
-                <th style="width: 8%;">رقم الفاتورة</th>
-                <th style="width: 11%;">المبلغ</th>
-                <th style="width: 11%;">الملاحظات</th>
+                <th style="width: 9%;">التصنيف</th>
+                <th style="width: 11%;">مركز التكلفة (المشروع)</th>
+                <th style="width: 7.5%;">طريقة الدفع</th>
+                <th style="width: 7.5%;">رقم السند</th>
+                <th style="width: 7%;">رقم الفاتورة</th>
+                <th style="width: 9%;">المبلغ</th>
+                <th style="width: 6%;">الملاحظات</th>
               </tr>
             </thead>
             <tbody>
               ${tableRowsHtml}
               ${options.rows.length > 0 ? `
               <tr class="total-row">
-                <td colspan="8" style="text-align: center;">الإجمالي الكلي</td>
+                <td colspan="9" style="text-align: center;">الإجمالي الكلي</td>
                 <td class="col-amount" style="text-align: left; font-size: 10pt; font-weight: 900;">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</td>
                 <td></td>
               </tr>

@@ -4,6 +4,18 @@ import { ExportService } from '../services/export.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
+function formatPaymentMethod(pm: any): string {
+  if (!pm) return 'كاش';
+  const val = typeof pm === 'string' ? pm : (pm.name || pm.code || '');
+  if (val.includes('بنك') || val.includes('BANK') || val.includes('تحويل') || val.includes('شيك') || val.includes('بطاقة') || val.includes('CARD') || val.includes('CHECK')) {
+    return 'بنك';
+  }
+  if (val.includes('كاش') || val.includes('نقد') || val.includes('CASH')) {
+    return 'كاش';
+  }
+  return val || 'كاش';
+}
+
 export class ReportController {
   // 1. Daily Expenses Report
   static async getDailyExpenses(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -30,7 +42,7 @@ export class ReportController {
         beneficiary: tx.beneficiary?.name || '-',
         category: tx.category?.name || '-',
         project: tx.project?.projectName || 'غير مربوط',
-        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        paymentMethod: formatPaymentMethod(tx.paymentMethod),
         paymentReference: tx.paymentReference || '-',
         invoiceNumber: tx.invoiceNumber || '-',
         invoiceStatus: tx.invoiceStatus || '-',
@@ -68,7 +80,7 @@ export class ReportController {
         beneficiary: tx.beneficiary?.name || '-',
         category: tx.category?.name || '-',
         project: tx.project?.projectName || 'غير مربوط',
-        paymentMethod: tx.paymentMethod?.name || 'نقدي',
+        paymentMethod: formatPaymentMethod(tx.paymentMethod),
         paymentReference: tx.paymentReference || '-',
         invoiceNumber: tx.invoiceNumber || '-',
         invoiceStatus: tx.invoiceStatus || '-',
