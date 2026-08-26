@@ -478,7 +478,7 @@ export class ExportService {
           <!-- 1. رأس التقرير -->
           <div class="report-header">
             <div class="header-org">
-              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 52px; max-width: 140px; object-fit: contain; margin-bottom: 6px; display: block;" />` : ''}
+              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 65px; max-width: 180px; object-fit: contain; margin-bottom: 6px; display: block;" />` : ''}
               <div class="org-name">شركة إدارة المشاريع والخدمات العامة</div>
               <div class="org-dept">إدارة الشؤون المالية والمصروفات</div>
               <div class="org-meta">س.ت: 1010000000 | الرقم الضريبي: 300000000000003</div>
@@ -777,7 +777,7 @@ export class ExportService {
         <body>
           <div class="header-container">
             <div style="display: flex; align-items: center; gap: 14px;">
-              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 48px; max-width: 130px; object-fit: contain;" />` : ''}
+              ${logoBase64 ? `<img src="${logoBase64}" alt="شعار المؤسسة" style="max-height: 60px; max-width: 160px; object-fit: contain;" />` : ''}
               <div class="header-title">
                 <h1>${options.title}</h1>
                 ${options.subtitle ? `<div style="font-size: 12px; color: #666; margin-top: 4px;">${options.subtitle}</div>` : ''}
