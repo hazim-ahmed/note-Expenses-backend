@@ -10,9 +10,16 @@ function getLogoBase64(): string {
       path.join(process.cwd(), 'assets', 'logo.png'),
       path.join(process.cwd(), 'public', 'logo.png'),
       path.join(process.cwd(), 'logo.png'),
+      path.join(__dirname, '..', 'assets', 'logo.png'),
       path.join(__dirname, '..', '..', 'assets', 'logo.png'),
+      path.join(__dirname, '..', '..', '..', 'assets', 'logo.png'),
+      path.join(__dirname, '..', 'logo.png'),
+      path.join(__dirname, '..', '..', 'logo.png'),
       path.join(__dirname, '..', '..', '..', 'logo.png'),
       path.join(__dirname, '..', '..', '..', '..', 'logo.png'),
+      path.resolve('assets/logo.png'),
+      path.resolve('public/logo.png'),
+      path.resolve('logo.png'),
       'C:\\Users\\Silver_Bullet\\Desktop\\exoen_man\\logo.png',
     ];
     for (const p of candidatePaths) {
