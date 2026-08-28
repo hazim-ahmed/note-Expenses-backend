@@ -4,13 +4,14 @@ import { TransactionService } from '../services/transaction.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { getRiyadhDateString } from '../utils/date';
-import { TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '@expense-system/shared';
+import { TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '../shared';
 
 export class TodayController {
   static async getTodayOverview(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const todayJournal = await JournalService.getOrCreateTodayJournal(userId);
+      const userRole = req.user!.roles?.[0] || 'EXPENSE_USER';
+      const todayJournal = await JournalService.getOrCreateTodayJournal(userId, userRole);
       const systemDate = getRiyadhDateString();
 
       return sendSuccess(
@@ -33,7 +34,8 @@ export class TodayController {
   static async getTodayTransactions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const todayJournal = await JournalService.getOrCreateTodayJournal(userId);
+      const userRole = req.user!.roles?.[0] || 'EXPENSE_USER';
+      const todayJournal = await JournalService.getOrCreateTodayJournal(userId, userRole);
       return sendSuccess(res, todayJournal.transactions, 'تم جلب مصروفات اليوم بنجاح');
     } catch (error) {
       next(error);

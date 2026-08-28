@@ -479,5 +479,33 @@ export const swaggerDocument = {
         },
       },
     },
+    '/system/backups': {
+      get: {
+        summary: 'استعراض النسخ الاحتياطية لقواعد البيانات (للأدمن)',
+        tags: ['System & Security'],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'قائمة ملفات النسخ الاحتياطية المتاحة وأحجامها' },
+        },
+      },
+      post: {
+        summary: 'إنشاء نسخة احتياطية فورية لقاعدة البيانات (للأدمن)',
+        tags: ['System & Security'],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'تم إنشاء النسخة الاحتياطية بنجاح' },
+        },
+      },
+    },
+    '/health/deep': {
+      get: {
+        summary: 'الفحص التشغيلي الشمولي لسلامة الاتصال والذاكرة والخدمات',
+        tags: ['System & Security'],
+        responses: {
+          200: { description: 'تقرير الفحص التشغيلي ومقاييس الأداء والذاكرة' },
+          503: { description: 'عطل تشغيلي في الاتصال بقاعدة البيانات' },
+        },
+      },
+    },
   },
 };

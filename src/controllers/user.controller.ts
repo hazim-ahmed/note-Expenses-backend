@@ -8,7 +8,7 @@ import {
   UserRolesUpdateSchema,
   UserProjectsUpdateSchema,
   UserCashboxesUpdateSchema,
-} from '@expense-system/shared';
+} from '../shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class UserController {

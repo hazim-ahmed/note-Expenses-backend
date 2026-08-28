@@ -2,6 +2,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error.middleware';
 import { JournalService } from './journal.service';
 import { getRiyadhDate, getRiyadhDateString } from '../utils/date';
+import { NotificationService } from './notification.service';
 
 export class TransactionService {
   static async createTodayTransaction(data: any, userId: number, userRole: string) {
@@ -442,6 +443,14 @@ export class TransactionService {
       return res;
     });
 
+    NotificationService.notifyTransactionApproved({
+      transactionId: id,
+      systemReference: existing.systemReference,
+      amount: existing.amount.toString(),
+      approvedByUserId: userId,
+      createdByUserId: existing.createdBy,
+    });
+
     return {
       id: Number(updated.id),
       status: updated.status,
@@ -497,6 +506,15 @@ export class TransactionService {
       });
 
       return res;
+    });
+
+    NotificationService.notifyTransactionRejected({
+      transactionId: id,
+      systemReference: existing.systemReference,
+      amount: existing.amount.toString(),
+      reason: reason.trim(),
+      rejectedByUserId: userId,
+      createdByUserId: existing.createdBy,
     });
 
     return {

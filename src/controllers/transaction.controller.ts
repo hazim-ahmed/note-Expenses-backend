@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { TransactionService } from '../services/transaction.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { BulkAssignProjectSchema, TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '@expense-system/shared';
+import { BulkAssignProjectSchema, TodayTransactionCreateSchema, TodayTransactionUpdateSchema } from '../shared';
 
 export class TransactionController {
   static async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {

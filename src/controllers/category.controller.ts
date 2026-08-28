@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { CategoryService } from '../services/category.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { ExpenseCategoryCreateSchema, ExpenseCategoryUpdateSchema } from '@expense-system/shared';
+import { ExpenseCategoryCreateSchema, ExpenseCategoryUpdateSchema } from '../shared';
 
 export class CategoryController {
   static async getAll(_req: AuthenticatedRequest, res: Response, next: NextFunction) {

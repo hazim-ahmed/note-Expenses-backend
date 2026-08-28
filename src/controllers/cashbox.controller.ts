@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { CashboxService } from '../services/cashbox.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { CashboxCreateSchema, CashboxUpdateSchema } from '@expense-system/shared';
+import { CashboxCreateSchema, CashboxUpdateSchema } from '../shared';
 
 export class CashboxController {
   static async getAll(_req: AuthenticatedRequest, res: Response, next: NextFunction) {

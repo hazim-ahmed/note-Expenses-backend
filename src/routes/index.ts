@@ -13,8 +13,9 @@ import { PaymentMethodController } from '../controllers/paymentMethod.controller
 import { ReportController } from '../controllers/report.controller';
 import { AuditLogController } from '../controllers/auditLog.controller';
 import { AttachmentController } from '../controllers/attachment.controller';
+import { BackupController } from '../controllers/backup.controller';
 import { uploadMiddleware } from '../middleware/upload.middleware';
-import { authenticateJWT, requirePermission } from '../middleware/auth.middleware';
+import { authenticateJWT, requirePermission, requireRole } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -156,6 +157,12 @@ router.get('/reports/manual-vouchers/export/pdf', authenticateJWT, requirePermis
 // 13. Audit Logs
 // ─────────────────────────────────────────
 router.get('/audit-logs', authenticateJWT, requirePermission('users.view_activity'), AuditLogController.getAll);
+
+// ─────────────────────────────────────────
+// 14. System Database Backups (Admin Only)
+// ─────────────────────────────────────────
+router.post('/system/backups', authenticateJWT, requireRole('ADMIN'), BackupController.createBackup);
+router.get('/system/backups', authenticateJWT, requireRole('ADMIN'), BackupController.listBackups);
 
 export default router;
 

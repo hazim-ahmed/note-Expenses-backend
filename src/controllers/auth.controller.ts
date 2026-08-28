@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { sendSuccess } from '../utils/response';
-import { LoginSchema, RefreshTokenSchema } from '@expense-system/shared';
+import { LoginSchema, RefreshTokenSchema } from '../shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { TokenBlacklistService } from '../services/tokenBlacklist.service';
 
 export class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
@@ -33,9 +34,19 @@ export class AuthController {
     }
   }
 
-  static async logout(_req: Request, res: Response, next: NextFunction) {
+  static async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      return sendSuccess(res, null, 'تم تسجيل الخروج بنجاح');
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        TokenBlacklistService.revokeToken(token);
+      }
+
+      if (req.body?.refreshToken) {
+        TokenBlacklistService.revokeToken(req.body.refreshToken);
+      }
+
+      return sendSuccess(res, null, 'تم تسجيل الخروج وإلغاء الرمز بنجاح');
     } catch (error) {
       next(error);
     }

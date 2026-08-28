@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error.middleware';
 import { getRiyadhDate, getRiyadhDateString } from '../utils/date';
+import { NotificationService } from './notification.service';
 
 export class JournalService {
   /**
@@ -41,7 +42,7 @@ export class JournalService {
   /**
    * Finds or automatically creates today's OPEN journal (Asia/Riyadh timezone).
    */
-  static async getOrCreateTodayJournal(userId: number) {
+  static async getOrCreateTodayJournal(userId: number, userRole: string = 'USER') {
     // 1. Auto-close past open journals first
     await this.autoClosePastJournals();
 
@@ -59,6 +60,11 @@ export class JournalService {
 
     const journalNumber = `JRN-${cleanDateCode}-${cashbox.code}`;
 
+    const txWhere: any = { deletedAt: null };
+    if (userRole !== 'ADMIN') {
+      txWhere.createdBy = BigInt(userId);
+    }
+
     // Find existing journal for today date & cashbox
     let journal = await prisma.expenseJournal.findFirst({
       where: {
@@ -67,7 +73,7 @@ export class JournalService {
       },
       include: {
         transactions: {
-          where: { deletedAt: null },
+          where: txWhere,
           include: {
             beneficiary: true,
             category: true,
@@ -93,7 +99,7 @@ export class JournalService {
         },
         include: {
           transactions: {
-            where: { deletedAt: null },
+            where: txWhere,
             include: {
               beneficiary: true,
               category: true,
@@ -196,7 +202,10 @@ export class JournalService {
   }
 
   static async closeJournal(id: number, userId: number) {
-    const journal = await prisma.expenseJournal.findUnique({ where: { id: BigInt(id) } });
+    const journal = await prisma.expenseJournal.findUnique({
+      where: { id: BigInt(id) },
+      include: { cashbox: true },
+    });
     if (!journal) throw new AppError('اليومية غير موجودة', 404, 'NOT_FOUND');
 
     const updated = await prisma.expenseJournal.update({
@@ -216,6 +225,14 @@ export class JournalService {
         action: 'MANUAL_CLOSE_JOURNAL',
         reason: 'إغلاق اليومية يدوياً بواسطة مسؤول النظام',
       },
+    });
+
+    NotificationService.notifyJournalClosed({
+      journalId: id,
+      journalNumber: journal.journalNumber,
+      cashboxName: journal.cashbox.name,
+      closedByUserId: userId,
+      preparerUserId: journal.preparedBy,
     });
 
     return { id: Number(updated.id), status: updated.status };

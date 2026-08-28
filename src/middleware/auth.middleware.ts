@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { sendError } from '../utils/response';
 import { prisma } from '../utils/prisma';
+import { TokenBlacklistService } from '../services/tokenBlacklist.service';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -25,6 +26,11 @@ export async function authenticateJWT(
   }
 
   const token = authHeader.split(' ')[1];
+
+  // Check if token was revoked via logout
+  if (TokenBlacklistService.isBlacklisted(token)) {
+    return sendError(res, 'رمز المصادقة تم إلغاؤه (تم تسجيل الخروج)', 'UNAUTHORIZED', 401);
+  }
 
   try {
     const payload = jwt.verify(token, config.jwt.accessSecret) as any;

@@ -9,6 +9,7 @@ import { logger } from './utils/logger';
 import { errorHandler } from './middleware/error.middleware';
 import routes from './routes';
 import { swaggerDocument } from './config/swagger';
+import { BackupService } from './services/backup.service';
 
 const app = express();
 
@@ -42,10 +43,13 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // API Routes
 app.use('/api/v1', routes);
 
-// Base Health Check
+import { HealthController } from './controllers/health.controller';
+
+// Base Health Check & Deep Diagnostic Check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+app.get('/health/deep', HealthController.getDeepHealth);
 
 // Global Error Handler
 app.use(errorHandler);
@@ -54,6 +58,7 @@ if (process.env.NODE_ENV !== 'test') {
   app.listen(config.port, () => {
     logger.info(`🚀 Daily Expenses REST API running on port ${config.port}`);
     logger.info(`📖 Swagger API Docs available at http://localhost:${config.port}/api-docs`);
+    BackupService.initializeScheduledBackup();
   });
 }
 

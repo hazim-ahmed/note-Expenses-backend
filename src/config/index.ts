@@ -40,5 +40,13 @@ export const config = {
     dir: path.resolve(process.cwd(), process.env.UPLOAD_DIR || 'uploads'),
     maxSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10), // 5MB
   },
+  email: {
+    enabled: process.env.EMAIL_NOTIFICATIONS_ENABLED === 'true',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM || 'no-reply@expense-system.com',
+  },
 };
 

@@ -20,7 +20,7 @@ export function sendError(
   message = 'تعذر تنفيذ العملية',
   errorCode = 'INTERNAL_SERVER_ERROR',
   statusCode = 500,
-  errors?: any[]
+  errors?: any
 ) {
   return res.status(statusCode).json({
     success: false,

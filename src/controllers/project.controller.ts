@@ -7,7 +7,7 @@ import {
   ProjectStatusUpdateSchema,
   ProjectUnitCreateSchema,
   ProjectUnitUpdateSchema,
-} from '@expense-system/shared';
+} from '../shared';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class ProjectController {

@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { BeneficiaryService } from '../services/beneficiary.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { BeneficiaryCreateSchema, BeneficiaryUpdateSchema } from '@expense-system/shared';
+import { BeneficiaryCreateSchema, BeneficiaryUpdateSchema } from '../shared';
 
 export class BeneficiaryController {
   static async getAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
