@@ -9,6 +9,34 @@ export class TransactionService {
     // 1. Resolve or Auto-Create Today's Open Journal
     const todayJournal = await JournalService.getOrCreateTodayJournal(userId);
 
+    // 1.1 Idempotency & De-duplication Check (Prevent duplicate submissions)
+    if (data.idempotencyKey || data.manualVoucherNumber) {
+      const idempotencySearch = data.idempotencyKey ? `[IDEM:${data.idempotencyKey}]` : null;
+      const existing = await prisma.expenseTransaction.findFirst({
+        where: {
+          journalId: BigInt(todayJournal.id),
+          createdBy: BigInt(userId),
+          deletedAt: null,
+          OR: [
+            ...(data.manualVoucherNumber ? [{ manualVoucherNumber: data.manualVoucherNumber.trim() }] : []),
+            ...(idempotencySearch ? [{ notes: { contains: idempotencySearch } }] : []),
+          ],
+        },
+        include: {
+          beneficiary: true,
+          category: true,
+          project: true,
+          projectUnit: true,
+          paymentMethod: true,
+          creator: { select: { id: true, username: true, fullName: true } },
+        },
+      });
+
+      if (existing) {
+        return existing; // Return duplicate transaction safely
+      }
+    }
+
     // Check user cashbox permission if non-admin (Deny by default)
     if (userRole !== 'ADMIN') {
       const userCashbox = await prisma.userCashbox.findUnique({
@@ -162,7 +190,9 @@ export class TransactionService {
               paymentReference: data.paymentReference?.trim() || null,
               fiscalYear,
               status: 'APPROVED',
-              notes: data.notes || null,
+              notes: data.idempotencyKey 
+                ? `${data.notes || ''} [IDEM:${data.idempotencyKey}]`.trim() 
+                : (data.notes || null),
               createdBy: BigInt(userId),
             },
             include: {
