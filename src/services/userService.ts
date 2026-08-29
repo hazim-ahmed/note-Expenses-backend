@@ -430,4 +430,22 @@ export class UserService {
     });
     return this.getUserById(userId);
   }
+
+  static async getAllRoles() {
+    const roles = await prisma.role.findMany({
+      include: {
+        rolePermissions: {
+          include: { permission: true },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    return roles.map((r) => ({
+      id: Number(r.id),
+      name: r.name,
+      description: r.description,
+      permissions: r.rolePermissions.map((rp) => rp.permission.code),
+    }));
+  }
 }

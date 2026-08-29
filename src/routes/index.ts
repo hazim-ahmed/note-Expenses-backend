@@ -98,6 +98,7 @@ router.post('/users/:id/reset-password', authenticateJWT, requirePermission('use
 router.patch('/users/:id/roles', authenticateJWT, requirePermission('users.assign_roles'), UserController.updateRoles);
 router.patch('/users/:id/projects', authenticateJWT, requirePermission('users.assign_roles'), UserController.updateProjects);
 router.patch('/users/:id/cashboxes', authenticateJWT, requirePermission('users.assign_roles'), UserController.updateCashboxes);
+router.get('/roles', authenticateJWT, UserController.getRoles);
 
 // ─────────────────────────────────────────
 // 7. Beneficiaries

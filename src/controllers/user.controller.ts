@@ -135,4 +135,13 @@ export class UserController {
       next(error);
     }
   }
+
+  static async getRoles(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const roles = await UserService.getAllRoles();
+      return sendSuccess(res, roles, 'تم جلب قائمة الأدوار بنجاح');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
