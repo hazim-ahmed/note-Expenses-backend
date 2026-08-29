@@ -1,4 +1,3 @@
-import Redis from 'ioredis';
 import { logger } from '../utils/logger';
 
 interface MemoryCacheItem {
@@ -7,7 +6,7 @@ interface MemoryCacheItem {
 }
 
 class CacheService {
-  private redis: Redis | null = null;
+  private redis: any = null;
   private isRedisConnected = false;
   private memoryStore: Map<string, MemoryCacheItem> = new Map();
   private cleanupInterval: NodeJS.Timeout | null = null;
@@ -25,19 +24,31 @@ class CacheService {
 
     if (redisUrl || redisHost) {
       try {
+        let RedisConstructor: any;
+        try {
+          // Dynamic require to prevent compilation failure if module is optional
+          RedisConstructor = require('ioredis');
+          if (RedisConstructor.default) {
+            RedisConstructor = RedisConstructor.default;
+          }
+        } catch (_) {
+          logger.warn('ioredis package not found in node_modules, using in-memory cache');
+          return;
+        }
+
         if (redisUrl) {
-          this.redis = new Redis(redisUrl, {
+          this.redis = new RedisConstructor(redisUrl, {
             maxRetriesPerRequest: 1,
-            retryStrategy: (times) => (times > 3 ? null : Math.min(times * 100, 2000)),
+            retryStrategy: (times: number) => (times > 3 ? null : Math.min(times * 100, 2000)),
             lazyConnect: true,
           });
         } else {
-          this.redis = new Redis({
+          this.redis = new RedisConstructor({
             host: redisHost,
             port: redisPort,
             password: redisPassword,
             maxRetriesPerRequest: 1,
-            retryStrategy: (times) => (times > 3 ? null : Math.min(times * 100, 2000)),
+            retryStrategy: (times: number) => (times > 3 ? null : Math.min(times * 100, 2000)),
             lazyConnect: true,
           });
         }
@@ -45,7 +56,7 @@ class CacheService {
         this.redis.connect().then(() => {
           this.isRedisConnected = true;
           logger.info('⚡ Redis Cache Connected Successfully');
-        }).catch((err) => {
+        }).catch((err: any) => {
           this.isRedisConnected = false;
           logger.warn(`Redis connection failed, fallback to in-memory cache: ${err.message}`);
         });
@@ -54,7 +65,7 @@ class CacheService {
           this.isRedisConnected = true;
         });
 
-        this.redis.on('error', (err) => {
+        this.redis.on('error', (err: any) => {
           this.isRedisConnected = false;
           logger.warn(`Redis Error (falling back to memory cache): ${err.message}`);
         });
@@ -75,7 +86,7 @@ class CacheService {
           this.memoryStore.delete(key);
         }
       }
-    }, 60000); // Clean expired memory items every 60s
+    }, 60000);
   }
 
   public async get<T>(key: string): Promise<T | null> {
@@ -91,7 +102,6 @@ class CacheService {
       // Fallback to memory
     }
 
-    // In-memory lookup
     const item = this.memoryStore.get(key);
     if (!item) return null;
 
@@ -125,7 +135,6 @@ class CacheService {
       // Fallback to memory
     }
 
-    // In-memory set
     this.memoryStore.set(key, {
       value: serialized,
       expiresAt: ttlSeconds > 0 ? Date.now() + ttlSeconds * 1000 : 0,
@@ -152,7 +161,6 @@ class CacheService {
       }
     } catch (_) {}
 
-    // In-memory pattern delete
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
     for (const key of this.memoryStore.keys()) {
       if (regex.test(key)) {
