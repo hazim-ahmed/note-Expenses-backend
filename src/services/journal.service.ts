@@ -61,7 +61,8 @@ export class JournalService {
     const journalNumber = `JRN-${cleanDateCode}-${cashbox.code}`;
 
     const txWhere: any = { deletedAt: null };
-    if (userRole !== 'ADMIN') {
+    const canViewAll = ['ADMIN', 'ACCOUNTANT', 'MANAGER'].includes(userRole?.toUpperCase());
+    if (!canViewAll) {
       txWhere.createdBy = BigInt(userId);
     }
 

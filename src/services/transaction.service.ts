@@ -189,7 +189,9 @@ export class TransactionService {
               invoiceAmount,
               paymentReference: data.paymentReference?.trim() || null,
               fiscalYear,
-              status: 'APPROVED',
+              status: 'SUBMITTED',
+              submittedBy: BigInt(userId),
+              submittedAt: new Date(),
               notes: data.idempotencyKey 
                 ? `${data.notes || ''} [IDEM:${data.idempotencyKey}]`.trim() 
                 : (data.notes || null),
