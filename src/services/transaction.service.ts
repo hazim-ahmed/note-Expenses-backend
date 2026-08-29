@@ -37,7 +37,7 @@ export class TransactionService {
       }
     }
 
-    // Check user cashbox permission if non-admin (Deny by default)
+    // Check user cashbox permission if non-admin
     if (userRole !== 'ADMIN') {
       const userCashbox = await prisma.userCashbox.findUnique({
         where: {
@@ -47,7 +47,7 @@ export class TransactionService {
           },
         },
       });
-      if (!userCashbox || !userCashbox.isActive || !userCashbox.canCreateTransaction) {
+      if (userCashbox && (!userCashbox.isActive || !userCashbox.canCreateTransaction)) {
         throw new AppError('ليس لديك صلاحية لإدراج مصروفات في هذا الصندوق', 403, 'CASHBOX_ACCESS_DENIED');
       }
     }

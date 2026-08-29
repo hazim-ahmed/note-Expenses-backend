@@ -91,11 +91,22 @@ export function requirePermission(permissionCode: string) {
       return next(); // Admin has override power
     }
 
-    if (!req.user.permissions.includes(permissionCode)) {
-      return sendError(res, 'ليس لديك الصلاحية الكافية لتنفيذ هذا الإجراء', 'FORBIDDEN', 403);
+    // Default basic expense operations permitted for all active authenticated employees
+    const defaultUserPermissions = [
+      'transactions:create',
+      'transactions:read',
+      'projects.view',
+      'projects.view_expenses',
+    ];
+
+    if (
+      req.user.permissions.includes(permissionCode) ||
+      defaultUserPermissions.includes(permissionCode)
+    ) {
+      return next();
     }
 
-    next();
+    return sendError(res, 'ليس لديك الصلاحية الكافية لتنفيذ هذا الإجراء', 'FORBIDDEN', 403);
   };
 }
 
