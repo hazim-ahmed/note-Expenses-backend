@@ -87,11 +87,59 @@ export function requirePermission(permissionCode: string) {
       return sendError(res, 'المصادقة مطلوبة', 'UNAUTHORIZED', 401);
     }
 
-    if (req.user.roles.includes('ADMIN')) {
-      return next(); // Admin has override power
+    const roles = req.user.roles.map((r) => r.toUpperCase());
+
+    // 1. ADMIN has complete system override
+    if (roles.includes('ADMIN')) {
+      return next();
     }
 
-    // Default basic expense operations permitted for all active authenticated employees
+    // 2. ACCOUNTANT role permissions (Full Audit, Approval, Rejection, Project Assignment, Journal Closing & Reports)
+    const accountantPermissions = [
+      'transactions:approve',
+      'transactions:reject',
+      'transactions:assign_project',
+      'transactions:update',
+      'transactions:create',
+      'transactions:read',
+      'journals:approve',
+      'journals:close',
+      'journals:create',
+      'journals:reopen',
+      'reports:view',
+      'projects.view',
+      'projects.view_expenses',
+      'projects.assign_transactions',
+    ];
+
+    if (roles.includes('ACCOUNTANT') && accountantPermissions.includes(permissionCode)) {
+      return next();
+    }
+
+    // 3. MANAGER role permissions (Approval, Projects Management, Reports)
+    const managerPermissions = [
+      'transactions:approve',
+      'transactions:reject',
+      'transactions:assign_project',
+      'transactions:update',
+      'transactions:create',
+      'transactions:read',
+      'journals:approve',
+      'journals:close',
+      'journals:create',
+      'reports:view',
+      'projects.view',
+      'projects.create',
+      'projects.update',
+      'projects.view_expenses',
+      'projects.assign_transactions',
+    ];
+
+    if (roles.includes('MANAGER') && managerPermissions.includes(permissionCode)) {
+      return next();
+    }
+
+    // 4. Standard User / Cashier baseline permissions
     const defaultUserPermissions = [
       'transactions:create',
       'transactions:read',
