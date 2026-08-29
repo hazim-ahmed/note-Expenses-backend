@@ -17,7 +17,12 @@ import { BackupController } from '../controllers/backup.controller';
 import { uploadMiddleware } from '../middleware/upload.middleware';
 import { authenticateJWT, requirePermission, requireRole } from '../middleware/auth.middleware';
 
+import { SystemStatusController } from '../controllers/systemStatus.controller';
+
 const router = Router();
+
+// Public System Status Ping Endpoint (Ultra-Fast Keep-Alive)
+router.get('/system-status', SystemStatusController.getStatus);
 
 // ─────────────────────────────────────────
 // 1. Auth Routes (Public & Semi-Public)

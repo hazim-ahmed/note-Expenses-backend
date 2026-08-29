@@ -27,7 +27,7 @@ if (isProduction) {
 
 export const config = {
   env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.API_PORT || '4000', 10),
+  port: parseInt(process.env.PORT || process.env.API_PORT || '5000', 10),
   databaseUrl: process.env.DATABASE_URL || 'mysql://root:rootpassword@localhost:3306/expense_db',
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'super-secret-access-token-key-2026',

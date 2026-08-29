@@ -10,8 +10,12 @@ import { errorHandler } from './middleware/error.middleware';
 import routes from './routes';
 import { swaggerDocument } from './config/swagger';
 import { BackupService } from './services/backup.service';
+import { KeepAliveService } from './services/keepAlive.service';
 
 const app = express();
+
+// Trust proxy for Render / Vercel / Cloudflare reverse proxies
+app.set('trust proxy', 1);
 
 // Security Middlewares
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
@@ -45,7 +49,10 @@ app.use('/api/v1', routes);
 
 import { HealthController } from './controllers/health.controller';
 
-// Base Health Check & Deep Diagnostic Check
+// Base Health Check, Direct Ping & Deep Diagnostic Check
+app.get('/ping', (_req, res) => {
+  res.status(200).json({ status: 'ok', message: 'pong', timestamp: new Date().toISOString() });
+});
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -59,6 +66,7 @@ if (process.env.NODE_ENV !== 'test') {
     logger.info(`🚀 Daily Expenses REST API running on port ${config.port}`);
     logger.info(`📖 Swagger API Docs available at http://localhost:${config.port}/api-docs`);
     BackupService.initializeScheduledBackup();
+    KeepAliveService.start();
   });
 }
 
