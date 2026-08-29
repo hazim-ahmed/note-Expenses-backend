@@ -52,14 +52,9 @@ export class TransactionService {
       }
     }
 
-    // 2. Check System Setting for Project Requirement
-    const projectSetting = await prisma.systemSetting.findUnique({
-      where: { key: 'expenses.project_requirement_mode' },
-    });
-    const projectMode = projectSetting?.value || 'OPTIONAL';
-
-    if (projectMode === 'REQUIRED_ON_CREATE' && !data.projectId) {
-      throw new AppError('ربط المصروف بمشروع إجباري حسب إعدادات النظام الحالية', 400, 'PROJECT_REQUIRED');
+    // 2. Strict Project Requirement: Linking expense to a project is strictly mandatory
+    if (!data.projectId) {
+      throw new AppError('ربط المصروف بمشروع إجباري. يرجى اختيار المشروع التابع له المصروف', 400, 'PROJECT_REQUIRED');
     }
 
     // 3. If Project is selected, verify project is active & user authorization
