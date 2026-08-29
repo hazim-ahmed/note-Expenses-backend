@@ -199,6 +199,7 @@ export const ExpenseTransactionCreateSchema = z.object({
 });
 
 export const TodayTransactionCreateSchema = z.object({
+  idempotencyKey: z.string().optional(),
   manualVoucherNumber: z.string().trim().min(1).nullable().optional(),
   beneficiaryId: z.number().int().positive().nullable().optional(),
   beneficiaryName: z.string().trim().min(2).nullable().optional(),
