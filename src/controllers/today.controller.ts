@@ -12,7 +12,8 @@ export class TodayController {
     try {
       const userId = req.user!.id;
       const userRole = req.user!.roles?.[0] || 'EXPENSE_USER';
-      const cacheKey = `today:overview:${userId}:${userRole}`;
+      const systemDate = getRiyadhDateString();
+      const cacheKey = `today:overview:${systemDate}:${userId}:${userRole}`;
 
       const cached = await cacheService.get<any>(cacheKey);
       if (cached) {
@@ -20,7 +21,6 @@ export class TodayController {
       }
 
       const todayJournal = await JournalService.getOrCreateTodayJournal(userId, userRole);
-      const systemDate = getRiyadhDateString();
 
       const payload = {
         systemDate,
@@ -42,7 +42,8 @@ export class TodayController {
     try {
       const userId = req.user!.id;
       const userRole = req.user!.roles?.[0] || 'EXPENSE_USER';
-      const cacheKey = `today:transactions:${userId}:${userRole}`;
+      const systemDate = getRiyadhDateString();
+      const cacheKey = `today:transactions:${systemDate}:${userId}:${userRole}`;
 
       const cached = await cacheService.get<any[]>(cacheKey);
       if (cached) {

@@ -9,13 +9,17 @@ export class JournalService {
    */
   static async autoClosePastJournals() {
     const todayStr = getRiyadhDateString();
+    const cleanDateCode = todayStr.replace(/-/g, '');
     const todayDate = getRiyadhDate();
 
-    // Find all OPEN journals with date less than today
+    // Find all OPEN journals with date less than today OR journal number not matching today
     const pastOpenJournals = await prisma.expenseJournal.findMany({
       where: {
         status: 'OPEN',
-        journalDate: { lt: todayDate },
+        OR: [
+          { journalDate: { lt: todayDate } },
+          { NOT: { journalNumber: { contains: `JRN-${cleanDateCode}-` } } },
+        ],
       },
     });
 
@@ -33,7 +37,7 @@ export class JournalService {
           entityType: 'EXPENSE_JOURNAL',
           entityId: journal.id,
           action: 'AUTO_CLOSE_JOURNAL',
-          reason: `إغلاق تلقائي لليومية السابقة بتاريخ ${journal.journalNumber} عند حلول تاريخ جديد`,
+          reason: `إغلاق تلقائي لليومية السابقة (${journal.journalNumber}) عند حلول يوم جديد (${todayStr})`,
         },
       });
     }
